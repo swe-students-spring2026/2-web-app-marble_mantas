@@ -4,11 +4,11 @@ A little exercise to build a web application following an agile development proc
 
 ## Product vision statement
 
-See instructions. Delete this line and place the Product Vision Statement here.
+PantryPal is a simple, mobile-friendly web application that helps users track pantry inventory and manage grocery shopping efficiently to reduce food waste and avoid duplicate purchases.
 
 ## User stories
 
-See instructions. Delete this line and place a link to the user stories here.
+[Link to the list of user stories.](https://github.com/swe-students-spring2026/2-web-app-marble_mantas/issues/2)
 
 ## Steps necessary to run the software
 
