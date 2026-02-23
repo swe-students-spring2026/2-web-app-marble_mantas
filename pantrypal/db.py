@@ -12,3 +12,4 @@ db = client[MONGO_DBNAME]
 
 # Collections
 items = db["items"]
+users = db["users"]
