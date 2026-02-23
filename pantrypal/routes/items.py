@@ -61,7 +61,7 @@ def update_item(item_id):
         return jsonify({"error": "Invalid or missing JSON"}), 400
     
     updates = {}
-    if "name" in data: //required field, must not be empty
+    if "name" in data: #required field, must not be empty
         name = (data.get("name") or "").strip()
         if not name:
             return jsonify({"error": "Name cannot be empty"}), 400
