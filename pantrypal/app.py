@@ -1,8 +1,8 @@
-from flask import Flask, jsonify, redirect, url_for
-from routes.items import items_bp
-from flask_login import LoginManager
-from routes.auth import auth_bp, User
 import os
+from routes.items import items_bp
+from routes.auth import auth_bp, User
+from flask import Flask, jsonify, redirect, url_for
+from flask_login import LoginManager
 
 
 def create_app():

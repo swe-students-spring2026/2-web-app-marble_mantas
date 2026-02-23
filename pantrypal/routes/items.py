@@ -1,11 +1,19 @@
-from flask import Blueprint, request, render_template, redirect, url_for
-from bson import ObjectId
 from datetime import datetime
 from db import items
-from flask_login import login_required
+from flask import Blueprint, request, render_template, redirect, url_for
+from bson import ObjectId
+from flask_login import login_required, current_user
 
 items_bp = Blueprint("items_bp", __name__, url_prefix="/items")
+ALLOWED_STATUSES = {"to_buy", "pantry"}
 
+# ensure quantity is an integer and return None if invalid
+def parse_quantity(value):
+    try:
+        quantity = int(value)
+    except (TypeError, ValueError):
+        return None
+    return quantity
 
 def serialize_item(doc):
     return {
@@ -14,6 +22,8 @@ def serialize_item(doc):
         "quantity": doc.get("quantity"),
         "status": doc.get("status"),  # to_buy or pantry
         "category": doc.get("category"),
+
+        # Optional: Include timestamps if you want to show when items were added/updated
         "created_at": doc.get("created_at"),
         "updated_at": doc.get("updated_at"),
     }
@@ -22,20 +32,20 @@ def serialize_item(doc):
 @items_bp.get("")
 @login_required
 def list_items():
-    pantry_items = [serialize_item(item) for item in items.find({"status": "pantry"})]
-    shopping_items = [serialize_item(item) for item in items.find({"status": "to_buy"})]
+    pantry_items = [serialize_item(item) for item in items.find({"status": "pantry", "user_id": current_user.id})]
+    shopping_items = [serialize_item(item) for item in items.find({"status": "to_buy", "user_id": current_user.id})]
     return render_template("items_list.html", pantry_items=pantry_items, shopping_items=shopping_items)
 
 @items_bp.get("/pantry")
 @login_required
 def pantry_list():
-    pantry_items = [serialize_item(item) for item in items.find({"status": "pantry"})]
+    pantry_items = [serialize_item(item) for item in items.find({"status": "pantry", "user_id": current_user.id})]
     return render_template("pantry_list.html", items=pantry_items)
 
 @items_bp.get("/shopping")
 @login_required
 def shopping_list():
-    shopping_items = [serialize_item(item) for item in items.find({"status": "to_buy"})]
+    shopping_items = [serialize_item(item) for item in items.find({"status": "to_buy", "user_id": current_user.id})]
     return render_template("shopping_list.html", items=shopping_items)
 
 @items_bp.get("/create")
@@ -50,15 +60,21 @@ def create_item():
     if not name:
         return render_template("items_form.html", item=None, error="Name is required")
 
-    quantity = int(request.form.get("quantity", 1))
+    quantity = parse_quantity(request.form.get("quantity", 1))
+    if quantity is None:
+        return render_template("items_form.html", item=None, error="Quantity must be a number")
     if quantity <= 0:
         return render_template("items_form.html", item=None, error="Quantity must be at least 1")
 
+    status = request.form.get("status", "to_buy")
+    if status not in ALLOWED_STATUSES:
+        return render_template("items_form.html", item=None, error="Invalid status")
     item_doc = {
         "name": name,
         "quantity": quantity,
-        "status": request.form.get("status", "to_buy"),
+        "status": status,
         "category": request.form.get("category", ""),
+        "user_id": current_user.id,
         "created_at": datetime.now(),
         "updated_at": datetime.now(),
     }
@@ -81,21 +97,23 @@ def update_item(item_id):
     if not name:
         return render_template("items_form.html", item=None, error="Name cannot be empty")
 
-    quantity = int(request.form.get("quantity", 1))
-    
-    # Delete item if quantity is 0
+    quantity = parse_quantity(request.form.get("quantity", 1))
+    if quantity is None:
+        return render_template("items_form.html", item=None, error="Quantity must be a number")
     if quantity <= 0:
-        items.delete_one({"_id": ObjectId(item_id)})
-        return redirect(url_for("items_bp.list_items"))
+        return render_template("items_form.html", item=None, error="Quantity must be at least 1")
+    status = request.form.get("status", "to_buy")
+    if status not in ALLOWED_STATUSES:
+        return render_template("items_form.html", item=None, error="Invalid status")
     
     updates = {
         "name": name,
         "quantity": quantity,
-        "status": request.form.get("status", "to_buy"),
+        "status": status,
         "category": request.form.get("category", ""),
         "updated_at": datetime.now(),
     }
-    result = items.update_one({"_id": ObjectId(item_id)}, {"$set": updates})
+    result = items.update_one({"_id": ObjectId(item_id), "user_id": current_user.id}, {"$set": updates})
     if result.matched_count == 0:
         return render_template("items_form.html", item=None, error="Item not found"), 404
     

@@ -52,14 +52,15 @@ def register():
         password = request.form.get("password") or ""
         if not username or not password:
             error = "Username and password are required"
-        elif users.find_one({"username": username}):
-            error = "Username already exists"
         elif len(password) < 6:
             error = "Password must be at least 6 characters long"
         else:
             user = User.create(username, password)
-            login_user(user)
-            return redirect(url_for("auth_bp.me"))
+            if not user:
+                error = "Username already exists"
+            else:
+                login_user(user)
+                return redirect(url_for("auth_bp.settings"))
     return render_template("register.html", error=error)
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -76,7 +77,7 @@ def login():
                 error = "Invalid username or password"
             else:
                 login_user(user)
-                return redirect(url_for("auth_bp.me"))
+                return redirect(url_for("auth_bp.settings"))
     return render_template("login.html", error=error)
 
 @auth_bp.route("/logout", methods=["POST"])
