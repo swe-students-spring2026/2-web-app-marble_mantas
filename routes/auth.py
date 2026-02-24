@@ -5,6 +5,7 @@ from bson import ObjectId
 
 auth_bp = Blueprint("auth_bp", __name__, url_prefix="/auth")
 
+
 class User(UserMixin):
     def __init__(self, user_doc: dict):
         self.id = str(user_doc["_id"])
@@ -18,32 +19,30 @@ class User(UserMixin):
         if user_doc:
             return User(user_doc)
         return None
-    
+
     @staticmethod
     def get_by_username(username: str):
-        user_doc = users.find_one({"username" : username})
+        user_doc = users.find_one({"username": username})
         if user_doc:
             return User(user_doc)
         return None
-    
+
     @staticmethod
     def create(username: str, password: str):
         if users.find_one({"username": username}):
             return None  # Username already exists
-        user_doc = {
-            "username": username,
-            "password": password
-        }
+        user_doc = {"username": username, "password": password}
         result = users.insert_one(user_doc)
         return User(users.find_one({"_id": result.inserted_id}))
-    
+
     @staticmethod
     def verify_credentials(username: str, password: str):
         user_doc = users.find_one({"username": username, "password": password})
         if user_doc:
             return User(user_doc)
         return None
-    
+
+
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     error = None
@@ -60,8 +59,9 @@ def register():
                 error = "Username already exists"
             else:
                 login_user(user)
-                return redirect(url_for("auth_bp.settings"))
+                return redirect(url_for("auth_bp.home"))
     return render_template("register.html", error=error)
+
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
@@ -77,8 +77,9 @@ def login():
                 error = "Invalid username or password"
             else:
                 login_user(user)
-                return redirect(url_for("auth_bp.settings"))
+                return redirect(url_for("auth_bp.home"))
     return render_template("login.html", error=error)
+
 
 @auth_bp.route("/logout", methods=["POST"])
 @login_required
@@ -86,7 +87,13 @@ def logout():
     logout_user()
     return redirect(url_for("auth_bp.login"))
 
+
 @auth_bp.route("/settings", methods=["GET"])
 @login_required
 def settings():
     return render_template("settings.html", username=current_user.username)
+
+
+@auth_bp.route("/home", methods=["GET"])
+def home():
+    return render_template("home.html")

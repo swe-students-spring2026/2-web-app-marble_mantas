@@ -1,9 +1,9 @@
 import os
+from datetime import datetime
+from flask import Flask, jsonify, redirect, render_template, url_for
+from flask_login import LoginManager, current_user
 from routes.items import items_bp
 from routes.auth import auth_bp, User
-from flask import Flask, jsonify, redirect, url_for
-from flask_login import LoginManager
-
 
 def create_app():
     app = Flask(__name__)
@@ -31,6 +31,10 @@ def create_app():
     def health():
         return jsonify({"ok": True})
 
+    @app.get("/")
+    def home():
+        return render_template("login.html")
+    
     return app
 
 
