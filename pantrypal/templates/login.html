@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 16px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        h1 {
+            margin: 0 0 20px;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #1f6feb;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #175bc4;
+        }
+
+        .error {
+            margin-bottom: 12px;
+            color: #b00020;
+            font-size: 0.95rem;
+        }
+
+        .signup {
+            margin-top: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <main class="login-card">
+        <h1>Login</h1>
+
+
+        <form method="post" action="{{ url_for('auth_bp.login') }}">
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" autocomplete="username" required />
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" required />
+            </div>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p class="signup"><a href="{{ url_for('auth_bp.register') }}">Sign Up</a></p>
+    </main>
+</body>
+</html>
