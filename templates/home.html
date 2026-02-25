@@ -11,9 +11,9 @@
 
         body {
             margin: 0;
-            min-height: 100vh;
+            min-height: 100dvh;
             font-family: Arial, sans-serif;
-            background: #fff;
+            background: #e5e5e5;
             color: #000;
             display: flex;
             flex-direction: column;
@@ -21,35 +21,35 @@
 
         .page {
             width: 100%;
-            max-width: 420px;
+            max-width: 393px;
             margin: 0 auto;
-            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            padding: 28px 16px 0;
+            padding: calc(env(safe-area-inset-top) + 34px) 20px env(safe-area-inset-bottom);
         }
 
         .title {
             margin: 0;
             text-align: center;
-            font-size: 1.9rem;
+            font-size: 3.2rem;
             font-weight: 400;
         }
 
         .logo-box {
-            width: min(220px, 70vw);
+            width: min(210px, 64vw);
             aspect-ratio: 191 / 176;
             background: #d9d9d9;
-            margin: 56px auto 0;
+            margin: 84px auto 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 2.1rem;
         }
 
         .active-list {
-            margin: 72px auto 0;
-            font-size: 1.9rem;
+            margin: 110px auto 0;
+            font-size: 3rem;
             font-weight: 400;
             text-decoration: underline;
             text-align: center;
@@ -65,12 +65,12 @@
         .bottom-nav {
             margin-top: auto;
             border: 1px solid #000;
-            height: 96px;
+            height: 110px;
             display: flex;
             align-items: center;
             justify-content: space-around;
-            padding: 0 34px;
-            background: #fff;
+            padding: 0 28px;
+            background: #efefef;
         }
 
         .icon-button {
@@ -94,8 +94,8 @@
         }
 
         .icon-button img {
-            width: 38px;
-            height: 38px;
+            width: 46px;
+            height: 46px;
             object-fit: contain;
             display: block;
         }
@@ -103,15 +103,15 @@
         @media (max-width: 360px) {
             .title,
             .active-list {
-                font-size: 1.6rem;
+                font-size: 2.4rem;
             }
 
             .logo-box {
-                margin-top: 44px;
+                margin-top: 64px;
             }
 
             .active-list {
-                margin-top: 56px;
+                margin-top: 80px;
             }
         }
     </style>
@@ -122,20 +122,100 @@
 
         <div class="logo-box">Logo</div>
 
-        <a class="active-list" href="{{ url_for('items_bp.active_list_page', demo=1) if demo_mode else url_for('items_bp.active_list_page') }}">active list name</a>
+        <a class="active-list" id="activeListLink" href="{{ url_for('items_bp.active_list_page', demo=1) if demo_mode else url_for('items_bp.active_list_page') }}">active list name</a>
 
         <div class="bottom-nav">
-            <button class="icon-button" type="button" aria-label="Home">
+            <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
                 <img src="/images/home_icon.png" alt="Home icon" />
-            </button>
+            </a>
             <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
                 <img src="/images/plus_icon.png" alt="Plus icon" />
             </a>
-            <button class="icon-button" type="button" aria-label="List">
-                <img src="/images/list_icon.png" alt="List icon" />
-            </button>
+            <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
+                <img src="/images/list_icon.png" alt="Profile icon" />
+            </a>
             
         </div>
     </div>
+    <script>
+        const LISTS_KEY = "pantrypal_lists_v1";
+        const ACTIVE_KEY = "pantrypal_active_list_id_v1";
+        const demoMode = {{ "true" if demo_mode else "false" }};
+        const activeListLink = document.getElementById("activeListLink");
+
+        function makeDefaultLists() {
+            const baseItems = [
+                { id: "seed-item-1", name: "Item 1", quantity: "quantity" },
+                { id: "seed-item-2", name: "Item 2", quantity: "quantity" },
+                { id: "seed-item-3", name: "Item 3", quantity: "quantity" },
+                { id: "seed-item-4", name: "Item 4", quantity: "quantity" },
+            ];
+
+            return [1, 2, 3, 4, 5].map((index) => ({
+                id: `seed-list-${index}`,
+                name: `List ${index}`,
+                categories: [
+                    {
+                        id: `seed-list-${index}-cat-1`,
+                        name: "Category 1",
+                        items: index === 1 ? baseItems.map((item) => ({ ...item })) : [],
+                    },
+                    {
+                        id: `seed-list-${index}-cat-2`,
+                        name: "Category 2",
+                        items: [],
+                    },
+                    {
+                        id: `seed-list-${index}-cat-3`,
+                        name: "Category 3",
+                        items: [],
+                    },
+                ],
+            }));
+        }
+
+        function readLists() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(LISTS_KEY) || "[]");
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeLists(lists) {
+            localStorage.setItem(LISTS_KEY, JSON.stringify(lists));
+        }
+
+        function ensureLists() {
+            let lists = readLists();
+            if (lists.length === 0) {
+                lists = makeDefaultLists();
+                writeLists(lists);
+            }
+            return lists;
+        }
+
+        const lists = ensureLists();
+        let activeId = localStorage.getItem(ACTIVE_KEY);
+        if (!activeId || !lists.some((list) => list.id === activeId)) {
+            activeId = lists[0]?.id || null;
+            if (activeId) {
+                localStorage.setItem(ACTIVE_KEY, activeId);
+            }
+        }
+
+        const activeList = lists.find((list) => list.id === activeId) || lists[0];
+        if (activeList) {
+            activeListLink.textContent = activeList.name;
+
+            const url = new URL(activeListLink.getAttribute("href"), window.location.origin);
+            url.searchParams.set("list", activeList.id);
+            if (demoMode) {
+                url.searchParams.set("demo", "1");
+            }
+            activeListLink.setAttribute("href", `${url.pathname}${url.search}`);
+        }
+    </script>
 </body>
 </html>

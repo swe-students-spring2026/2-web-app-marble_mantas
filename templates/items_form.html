@@ -9,26 +9,34 @@
             box-sizing: border-box;
         }
 
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
         body {
             margin: 0;
-            min-height: 100vh;
+            min-height: 100dvh;
             font-family: Arial, sans-serif;
             background: #e5e5e5;
             color: #111;
+            overflow: hidden;
         }
 
         .page {
             width: 100%;
-            max-width: 420px;
-            min-height: 100vh;
+            max-width: 393px;
+            height: 100dvh;
+            min-height: 100dvh;
             margin: 0 auto;
         }
 
         .view {
-            min-height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
-            padding: 24px 14px 0;
+            overflow: hidden;
+            padding: calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 8px);
         }
 
         .hidden {
@@ -36,45 +44,48 @@
         }
 
         .editor-form {
-            margin-top: 92px;
-            padding: 0 6px;
+            margin-top: 34px;
+            padding: 0 2px 10px;
+            flex: 1;
+            overflow-y: auto;
         }
 
         .field-row {
             display: grid;
-            grid-template-columns: 145px 1fr;
+            grid-template-columns: 106px minmax(0, 1fr);
             align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
+            gap: 10px;
+            margin-bottom: 13px;
         }
 
         .field-row label {
-            font-size: 43px;
+            font-size: 1.05rem;
             line-height: 1;
+            white-space: nowrap;
         }
 
         .field-row input {
             width: 100%;
-            height: 46px;
+            height: 38px;
             border: 1px solid #616161;
             background: transparent;
-            font-size: 21px;
+            font-size: 0.95rem;
             padding: 0 10px;
             color: #111;
         }
 
         .category-add-row {
-            grid-template-columns: 145px 1fr auto;
+            grid-template-columns: 106px minmax(0, 1fr) auto;
         }
 
         .category-add-btn {
             border: none;
             background: transparent;
             color: #111;
-            font-size: 65px;
+            font-size: 2.2rem;
             line-height: 1;
-            height: 46px;
-            width: 44px;
+            height: 38px;
+            width: 30px;
             cursor: pointer;
             padding: 0;
         }
@@ -83,22 +94,22 @@
             width: 100%;
             display: flex;
             flex-wrap: wrap;
-            gap: 11px;
-            margin: 8px 0 22px;
-            padding-left: 24px;
-            min-height: 30px;
+            gap: 8px;
+            margin: 4px 0 14px;
+            padding-left: 8px;
+            min-height: 28px;
         }
 
         .category-chip {
             border: 1px solid #616161;
             background: #d0d0d0;
             color: #222;
-            min-height: 40px;
+            min-height: 34px;
             display: inline-flex;
             align-items: center;
             position: relative;
-            padding: 7px 28px 7px 13px;
-            font-size: 13px;
+            padding: 6px 24px 6px 10px;
+            font-size: 0.88rem;
             line-height: 1;
             cursor: pointer;
             user-select: none;
@@ -111,22 +122,22 @@
 
         .chip-remove {
             position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 14px;
-            height: 14px;
+            top: 3px;
+            right: 3px;
+            width: 12px;
+            height: 12px;
             border: 1px solid #7a7a7a;
             background: #bdbdbd;
             color: #111;
-            font-size: 11px;
+            font-size: 10px;
             line-height: 1;
             padding: 0;
             cursor: pointer;
         }
 
         .section-title {
-            font-size: 44px;
-            margin: 4px 0 13px;
+            font-size: 1.05rem;
+            margin: 0 0 10px;
             line-height: 1;
         }
 
@@ -134,25 +145,25 @@
             border: 1px solid #000;
             background: #000;
             color: #fff;
-            font-size: 42px;
+            font-size: 0.95rem;
             line-height: 1;
-            min-width: 96px;
-            height: 50px;
-            padding: 0 20px;
+            min-width: 80px;
+            height: 40px;
+            padding: 0 14px;
             cursor: pointer;
         }
 
         .add-item-row {
             display: flex;
             justify-content: flex-end;
-            margin: 4px 0 16px;
+            margin: 0 0 8px;
         }
 
         .status-message {
-            min-height: 20px;
+            min-height: 18px;
             margin: 0 0 12px;
-            padding-left: 24px;
-            font-size: 13px;
+            padding-left: 8px;
+            font-size: 0.8rem;
             color: #8b1f1f;
         }
 
@@ -160,28 +171,29 @@
             border: none;
             background: transparent;
             color: #111;
-            font-size: 21px;
+            font-size: 0.9rem;
             text-decoration: underline;
             display: block;
-            margin: 112px auto 34px;
+            margin: 46px auto 14px;
             cursor: pointer;
         }
 
         .create-row {
             display: flex;
             justify-content: flex-end;
-            margin-bottom: 18px;
-            padding-right: 24px;
+            margin-bottom: 4px;
+            padding-right: 0;
         }
 
         .bottom-nav {
-            margin-top: auto;
+            margin-top: 10px;
+            flex-shrink: 0;
             border: 1px solid #777;
-            height: 108px;
+            height: 90px;
             display: flex;
             align-items: center;
             justify-content: space-around;
-            padding: 0 30px;
+            padding: 0 18px;
             background: #efefef;
         }
 
@@ -202,14 +214,14 @@
         }
 
         .icon-button img {
-            width: 38px;
-            height: 38px;
+            width: 34px;
+            height: 34px;
             object-fit: contain;
             display: block;
         }
 
         .preview-header {
-            margin-top: 52px;
+            margin-top: 8px;
             display: flex;
             align-items: center;
             gap: 14px;
@@ -218,13 +230,13 @@
         .back-link {
             color: #111;
             text-decoration: none;
-            font-size: 38px;
+            font-size: 1.9rem;
             line-height: 1;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 42px;
-            height: 42px;
+            width: 30px;
+            height: 30px;
             border-radius: 6px;
             border: none;
             background: transparent;
@@ -238,17 +250,16 @@
 
         .preview-title {
             margin: 0;
-            font-size: 48px;
+            font-size: 1.65rem;
             font-weight: 400;
             line-height: 1;
         }
 
         .preview-frame {
-            margin: 26px auto 0;
-            width: calc(100% - 34px);
-            max-width: 326px;
-            height: 540px;
-            max-height: calc(100vh - 250px);
+            margin: 16px 0 0;
+            width: 100%;
+            flex: 1;
+            min-height: 220px;
             border: 1px solid #777;
             background: transparent;
             overflow-y: auto;
@@ -261,11 +272,11 @@
 
         .preview-category-toggle {
             list-style: none;
-            height: 53px;
+            min-height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 25px;
+            font-size: 1.25rem;
             font-weight: 400;
             text-align: center;
             cursor: pointer;
@@ -285,47 +296,47 @@
         }
 
         .preview-item-row {
-            height: 39px;
+            height: 36px;
             border-top: 1px solid #777;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
             padding: 0 8px;
-            font-size: 14px;
+            font-size: 0.88rem;
             color: #222;
         }
 
         .preview-item-qty {
-            font-size: 12px;
+            font-size: 0.8rem;
             color: #444;
         }
 
         .preview-empty-row {
             border-top: 1px solid #777;
-            height: 39px;
+            height: 36px;
         }
 
         @media (max-width: 380px) {
             .field-row {
-                grid-template-columns: 120px 1fr;
+                grid-template-columns: 96px minmax(0, 1fr);
             }
 
             .category-add-row {
-                grid-template-columns: 120px 1fr auto;
+                grid-template-columns: 96px minmax(0, 1fr) auto;
             }
 
             .field-row label,
             .section-title {
-                font-size: 34px;
+                font-size: 0.95rem;
             }
 
             .preview-title {
-                font-size: 40px;
+                font-size: 1.45rem;
             }
 
             .preview-category-toggle {
-                font-size: 22px;
+                font-size: 1.05rem;
             }
         }
     </style>
@@ -368,7 +379,7 @@
                 <button class="preview-link" id="openPreviewBtn" type="button">preview_list</button>
 
                 <div class="create-row">
-                    <button class="solid-btn" type="button">Create</button>
+                    <button class="solid-btn" id="createListBtn" type="button">Create</button>
                 </div>
             </div>
 
@@ -379,8 +390,8 @@
                 <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
                     <img src="/images/plus_icon.png" alt="Plus icon" />
                 </a>
-                <a class="icon-button" href="{{ url_for('items_bp.active_list_page', demo=1) if demo_mode else url_for('items_bp.active_list_page') }}" aria-label="List">
-                    <img src="/images/list_icon.png" alt="List icon" />
+                <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
+                    <img src="/images/list_icon.png" alt="Profile icon" />
                 </a>
             </nav>
         </section>
@@ -400,8 +411,8 @@
                 <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
                     <img src="/images/plus_icon.png" alt="Plus icon" />
                 </a>
-                <a class="icon-button" href="{{ url_for('items_bp.active_list_page', demo=1) if demo_mode else url_for('items_bp.active_list_page') }}" aria-label="List">
-                    <img src="/images/list_icon.png" alt="List icon" />
+                <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
+                    <img src="/images/list_icon.png" alt="Profile icon" />
                 </a>
             </nav>
         </section>
@@ -416,6 +427,8 @@
         const params = new URLSearchParams(window.location.search);
         const demoMode = params.get("demo") === "1";
         const previewMode = params.get("view") === "preview";
+        const LISTS_KEY = "pantrypal_lists_v1";
+        const ACTIVE_KEY = "pantrypal_active_list_id_v1";
 
         const categoryWrap = document.getElementById("categoryWrap");
         const statusMessage = document.getElementById("statusMessage");
@@ -430,6 +443,59 @@
 
         function setMessage(message) {
             statusMessage.textContent = message;
+        }
+
+        function readStoredLists() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(LISTS_KEY) || "[]");
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeStoredLists(lists) {
+            localStorage.setItem(LISTS_KEY, JSON.stringify(lists));
+        }
+
+        function createListPayload() {
+            const listId = `list-${Date.now()}`;
+            return {
+                id: listId,
+                name: listNameInput.value.trim() || "List Name",
+                categories: state.categories.map((category, categoryIndex) => ({
+                    id: `cat-${listId}-${categoryIndex}`,
+                    name: category.name,
+                    items: (Array.isArray(category.items) ? category.items : []).map((item, itemIndex) => ({
+                        id: `item-${listId}-${categoryIndex}-${itemIndex}`,
+                        name: item.name,
+                        quantity: item.quantity,
+                    })),
+                })),
+            };
+        }
+
+        function createList() {
+            if (state.categories.length === 0) {
+                setMessage("Add at least one category before creating.");
+                return;
+            }
+
+            const newList = createListPayload();
+            const lists = readStoredLists();
+            lists.push(newList);
+            writeStoredLists(lists);
+
+            if (!localStorage.getItem(ACTIVE_KEY)) {
+                localStorage.setItem(ACTIVE_KEY, newList.id);
+            }
+
+            const profileUrl = new URL("{{ url_for('auth_bp.profile') }}", window.location.origin);
+            if (demoMode) {
+                profileUrl.searchParams.set("demo", "1");
+            }
+            profileUrl.searchParams.set("list", newList.id);
+            window.location.href = `${profileUrl.pathname}${profileUrl.search}`;
         }
 
         function renderCategoryChips() {
@@ -636,6 +702,7 @@
         document.getElementById("addItemBtn").addEventListener("click", addItem);
         document.getElementById("openPreviewBtn").addEventListener("click", openPreview);
         document.getElementById("closePreviewBtn").addEventListener("click", closePreview);
+        document.getElementById("createListBtn").addEventListener("click", createList);
 
         categoryInput.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {

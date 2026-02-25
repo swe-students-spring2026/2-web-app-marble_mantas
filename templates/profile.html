@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            font-family: Arial, sans-serif;
+            background: #e5e5e5;
+            color: #111;
+            overflow: hidden;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 393px;
+            height: 100dvh;
+            min-height: 100dvh;
+            margin: 0 auto;
+        }
+
+        .view {
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 8px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .profile-top {
+            margin-top: 8px;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .gear-btn {
+            border: none;
+            background: transparent;
+            color: #111;
+            font-size: 2rem;
+            line-height: 1;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .avatar-box {
+            width: 170px;
+            height: 170px;
+            margin: 12px auto 0;
+            background: #d0d0d0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            text-decoration: underline;
+        }
+
+        .username {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 1.55rem;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        .list-heading {
+            margin: 28px 0 10px;
+            text-decoration: underline;
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .lists-frame {
+            width: 100%;
+            margin: 0;
+            flex: 1;
+            min-height: 220px;
+            border: 1px solid #666;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: transparent;
+        }
+
+        .list-row {
+            min-height: 64px;
+            border-bottom: 1px solid #666;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #e5e5e5;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+
+        .list-row.active {
+            background: #dbdbdb;
+        }
+
+        .active-badge {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-header {
+            margin-top: 4px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+        }
+
+        .back-button {
+            border: none;
+            background: transparent;
+            color: #111;
+            font-size: 1.9rem;
+            line-height: 1;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0;
+            width: 32px;
+            cursor: pointer;
+        }
+
+        .detail-title {
+            margin: 0;
+            font-size: 1.65rem;
+            font-weight: 400;
+            line-height: 1;
+            width: 100%;
+            text-align: center;
+            padding: 0 34px;
+            overflow-wrap: anywhere;
+        }
+
+        .edit-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: calc(100% - 40px);
+            margin-left: 40px;
+            padding-right: 0;
+        }
+
+        .edit-header label {
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        .edit-header input {
+            flex: 1;
+            min-width: 0;
+            height: 36px;
+            border: 1px solid #666;
+            background: transparent;
+            font-size: 0.9rem;
+            padding: 0 10px;
+        }
+
+        .detail-frame {
+            margin: 16px 0 0;
+            width: 100%;
+            flex: 1;
+            min-height: 230px;
+            border: 1px solid #777;
+            background: transparent;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .category-block {
+            border-bottom: 1px solid #777;
+            background: #e5e5e5;
+        }
+
+        .category-summary {
+            list-style: none;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 400;
+            text-align: center;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+
+        .category-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .category-summary::marker {
+            content: "";
+        }
+
+        .category-summary.edit {
+            justify-content: space-between;
+            padding: 0 12px;
+            text-align: left;
+        }
+
+        .delete-btn {
+            border: none;
+            background: transparent;
+            color: #e30000;
+            font-size: 1.85rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 2px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .category-items {
+            background: #e5e5e5;
+        }
+
+        .preview-item {
+            height: 39px;
+            border-top: 1px solid #777;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            font-size: 0.92rem;
+        }
+
+        .preview-item-qty {
+            font-size: 0.8rem;
+            color: #444;
+        }
+
+        .empty-row {
+            border-top: 1px solid #777;
+            height: 39px;
+        }
+
+        .edit-item {
+            border-top: 1px solid #777;
+            padding: 6px 8px 8px;
+        }
+
+        .edit-item-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .edit-item-title {
+            font-size: 0.82rem;
+        }
+
+        .edit-item-qty {
+            margin-left: auto;
+            font-size: 0.74rem;
+            color: #444;
+        }
+
+        .edit-item-field {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: 62px 1fr;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .edit-item-field label {
+            font-size: 0.8rem;
+        }
+
+        .edit-item-field input {
+            width: 100%;
+            height: 26px;
+            border: 1px solid #666;
+            background: transparent;
+            font-size: 0.8rem;
+            padding: 0 8px;
+        }
+
+        .action-row {
+            margin: 14px 0 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 0;
+        }
+
+        .action-row.save-only {
+            justify-content: center;
+        }
+
+        .solid-btn {
+            height: 34px;
+            min-width: 82px;
+            border: 1px solid #000;
+            background: #000;
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .solid-btn.hidden {
+            display: none !important;
+        }
+
+        .status-text {
+            min-height: 16px;
+            margin: 8px 0 0;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #8b1f1f;
+        }
+
+        .bottom-nav {
+            margin-top: 10px;
+            flex-shrink: 0;
+            border: 1px solid #777;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 18px;
+            background: #efefef;
+        }
+
+        .icon-button {
+            border: none;
+            background: transparent;
+            padding: 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .icon-button:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        .icon-button img {
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+            display: block;
+        }
+
+        @media (max-width: 380px) {
+            .list-heading {
+                font-size: 1.55rem;
+            }
+
+            .list-row {
+                font-size: 1.12rem;
+            }
+
+            .detail-title {
+                font-size: 1.45rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <section class="view" id="profileListView">
+            <div class="profile-top">
+                <button class="gear-btn" type="button" aria-label="Settings">&#9881;</button>
+            </div>
+
+            <div class="avatar-box">image</div>
+            <div class="username">Username</div>
+
+            <h1 class="list-heading">My Grocer Lists:</h1>
+            <section class="lists-frame" id="listsFrame" aria-label="Your grocery lists"></section>
+
+            <nav class="bottom-nav" aria-label="Bottom navigation">
+                <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
+                    <img src="/images/home_icon.png" alt="Home icon" />
+                </a>
+                <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
+                    <img src="/images/plus_icon.png" alt="Plus icon" />
+                </a>
+                <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
+                    <img src="/images/list_icon.png" alt="Profile icon" />
+                </a>
+            </nav>
+        </section>
+
+        <section class="view hidden" id="detailView">
+            <header class="detail-header">
+                <button class="back-button" id="backToListsBtn" type="button" aria-label="Back">&#8592;</button>
+                <h2 class="detail-title" id="viewModeTitle">Preview List Name</h2>
+                <div class="edit-header hidden" id="editHeader">
+                    <label for="editListNameInput">List Name:</label>
+                    <input id="editListNameInput" type="text" />
+                </div>
+            </header>
+
+            <section class="detail-frame" id="detailFrame" aria-label="List details"></section>
+
+            <div class="action-row" id="actionRow">
+                <button class="solid-btn" id="activateBtn" type="button">Activate</button>
+                <button class="solid-btn" id="editBtn" type="button">Edit</button>
+                <button class="solid-btn" id="deleteBtn" type="button">Delete</button>
+                <button class="solid-btn hidden" id="saveBtn" type="button">Save</button>
+            </div>
+
+            <p class="status-text" id="statusText"></p>
+
+            <nav class="bottom-nav" aria-label="Bottom navigation">
+                <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
+                    <img src="/images/home_icon.png" alt="Home icon" />
+                </a>
+                <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
+                    <img src="/images/plus_icon.png" alt="Plus icon" />
+                </a>
+                <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
+                    <img src="/images/list_icon.png" alt="Profile icon" />
+                </a>
+            </nav>
+        </section>
+    </main>
+
+    <script>
+        const LISTS_KEY = "pantrypal_lists_v1";
+        const ACTIVE_KEY = "pantrypal_active_list_id_v1";
+        const params = new URLSearchParams(window.location.search);
+        const demoMode = params.get("demo") === "1";
+        const openListId = params.get("list");
+
+        const profileListView = document.getElementById("profileListView");
+        const detailView = document.getElementById("detailView");
+        const listsFrame = document.getElementById("listsFrame");
+        const detailFrame = document.getElementById("detailFrame");
+        const viewModeTitle = document.getElementById("viewModeTitle");
+        const editHeader = document.getElementById("editHeader");
+        const editListNameInput = document.getElementById("editListNameInput");
+        const actionRow = document.getElementById("actionRow");
+        const statusText = document.getElementById("statusText");
+        const activateBtn = document.getElementById("activateBtn");
+        const editBtn = document.getElementById("editBtn");
+        const deleteBtn = document.getElementById("deleteBtn");
+        const saveBtn = document.getElementById("saveBtn");
+
+        const state = {
+            lists: [],
+            activeListId: null,
+            selectedListId: null,
+            isEditing: false,
+            draftList: null,
+        };
+
+        function makeDefaultLists() {
+            const baseItems = [
+                { id: "seed-item-1", name: "Item 1", quantity: "quantity" },
+                { id: "seed-item-2", name: "Item 2", quantity: "quantity" },
+                { id: "seed-item-3", name: "Item 3", quantity: "quantity" },
+                { id: "seed-item-4", name: "Item 4", quantity: "quantity" },
+            ];
+
+            return [1, 2, 3, 4, 5].map((index) => ({
+                id: `seed-list-${index}`,
+                name: `List ${index}`,
+                categories: [
+                    {
+                        id: `seed-list-${index}-cat-1`,
+                        name: "Category 1",
+                        items: index === 1 ? baseItems.map((item) => ({ ...item })) : [],
+                    },
+                    {
+                        id: `seed-list-${index}-cat-2`,
+                        name: "Category 2",
+                        items: [],
+                    },
+                    {
+                        id: `seed-list-${index}-cat-3`,
+                        name: "Category 3",
+                        items: [],
+                    },
+                ],
+            }));
+        }
+
+        function fallbackId(prefix, a, b, c) {
+            return `${prefix}-${a}-${b}-${c}`;
+        }
+
+        function normalizeLists(rawLists) {
+            if (!Array.isArray(rawLists)) {
+                return [];
+            }
+
+            return rawLists.map((list, listIndex) => {
+                const categories = Array.isArray(list.categories) ? list.categories : [];
+                return {
+                    id: String(list.id || fallbackId("list", listIndex, "id", Date.now())),
+                    name: String(list.name || `List ${listIndex + 1}`),
+                    categories: categories.map((category, categoryIndex) => {
+                        const items = Array.isArray(category.items) ? category.items : [];
+                        return {
+                            id: String(category.id || fallbackId("cat", listIndex, categoryIndex, Date.now())),
+                            name: String(category.name || `Category ${categoryIndex + 1}`),
+                            items: items.map((item, itemIndex) => ({
+                                id: String(item.id || fallbackId("item", listIndex, categoryIndex, itemIndex)),
+                                name: String(item.name || `Item ${itemIndex + 1}`),
+                                quantity: String(item.quantity || "quantity"),
+                            })),
+                        };
+                    }),
+                };
+            });
+        }
+
+        function readLists() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(LISTS_KEY) || "[]");
+                return normalizeLists(parsed);
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeLists(lists) {
+            localStorage.setItem(LISTS_KEY, JSON.stringify(lists));
+        }
+
+        function readActiveId() {
+            return localStorage.getItem(ACTIVE_KEY);
+        }
+
+        function writeActiveId(activeId) {
+            if (activeId) {
+                localStorage.setItem(ACTIVE_KEY, activeId);
+            } else {
+                localStorage.removeItem(ACTIVE_KEY);
+            }
+        }
+
+        function cloneList(list) {
+            return JSON.parse(JSON.stringify(list));
+        }
+
+        function setStatus(message) {
+            statusText.textContent = message;
+        }
+
+        function findListById(listId) {
+            return state.lists.find((list) => list.id === listId) || null;
+        }
+
+        function persistState() {
+            writeLists(state.lists);
+            writeActiveId(state.activeListId);
+        }
+
+        function ensureState() {
+            let lists = readLists();
+            if (lists.length === 0) {
+                lists = makeDefaultLists();
+                writeLists(lists);
+            }
+
+            let activeId = readActiveId();
+            if (!activeId || !lists.some((list) => list.id === activeId)) {
+                activeId = lists[0]?.id || null;
+                writeActiveId(activeId);
+            }
+
+            state.lists = lists;
+            state.activeListId = activeId;
+        }
+
+        function renderListRows() {
+            listsFrame.innerHTML = "";
+
+            if (state.lists.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "list-row";
+                empty.textContent = "No Lists";
+                listsFrame.appendChild(empty);
+                return;
+            }
+
+            state.lists.forEach((list) => {
+                const row = document.createElement("div");
+                row.className = "list-row";
+                if (list.id === state.activeListId) {
+                    row.classList.add("active");
+                }
+
+                const name = document.createElement("span");
+                name.textContent = list.name;
+
+                row.appendChild(name);
+
+                if (list.id === state.activeListId) {
+                    const badge = document.createElement("span");
+                    badge.className = "active-badge";
+                    badge.textContent = "Active";
+                    row.appendChild(badge);
+                }
+
+                row.addEventListener("click", () => {
+                    state.selectedListId = list.id;
+                    state.isEditing = false;
+                    state.draftList = cloneList(list);
+                    openDetailView();
+                });
+
+                listsFrame.appendChild(row);
+            });
+        }
+
+        function renderPreviewCategory(category, openByDefault) {
+            const details = document.createElement("details");
+            details.className = "category-block";
+            if (openByDefault) {
+                details.open = true;
+            }
+
+            const summary = document.createElement("summary");
+            summary.className = "category-summary";
+            summary.textContent = category.name;
+            details.appendChild(summary);
+
+            const itemsContainer = document.createElement("div");
+            itemsContainer.className = "category-items";
+
+            if (category.items.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty-row";
+                itemsContainer.appendChild(empty);
+            } else {
+                category.items.forEach((item) => {
+                    const row = document.createElement("div");
+                    row.className = "preview-item";
+
+                    const name = document.createElement("span");
+                    name.textContent = item.name;
+                    const qty = document.createElement("span");
+                    qty.className = "preview-item-qty";
+                    qty.textContent = item.quantity;
+
+                    row.appendChild(name);
+                    row.appendChild(qty);
+                    itemsContainer.appendChild(row);
+                });
+            }
+
+            details.appendChild(itemsContainer);
+            return details;
+        }
+
+        function removeDraftCategory(categoryId) {
+            state.draftList.categories = state.draftList.categories.filter((category) => category.id !== categoryId);
+            renderDetailFrame();
+        }
+
+        function removeDraftItem(categoryId, itemId) {
+            const category = state.draftList.categories.find((entry) => entry.id === categoryId);
+            if (!category) {
+                return;
+            }
+
+            category.items = category.items.filter((item) => item.id !== itemId);
+            renderDetailFrame();
+        }
+
+        function renderEditCategory(category, categoryIndex) {
+            const details = document.createElement("details");
+            details.className = "category-block";
+            if (categoryIndex === 0) {
+                details.open = true;
+            }
+
+            const summary = document.createElement("summary");
+            summary.className = "category-summary edit";
+
+            const title = document.createElement("span");
+            title.textContent = category.name;
+            summary.appendChild(title);
+
+            const removeCategoryBtn = document.createElement("button");
+            removeCategoryBtn.className = "delete-btn";
+            removeCategoryBtn.type = "button";
+            removeCategoryBtn.textContent = "×";
+            removeCategoryBtn.setAttribute("aria-label", `Delete ${category.name}`);
+            removeCategoryBtn.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                removeDraftCategory(category.id);
+            });
+            summary.appendChild(removeCategoryBtn);
+
+            details.appendChild(summary);
+
+            const itemsContainer = document.createElement("div");
+            itemsContainer.className = "category-items";
+
+            if (category.items.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty-row";
+                itemsContainer.appendChild(empty);
+            } else {
+                category.items.forEach((item, itemIndex) => {
+                    const block = document.createElement("div");
+                    block.className = "edit-item";
+
+                    const topRow = document.createElement("div");
+                    topRow.className = "edit-item-top";
+
+                    const itemTitle = document.createElement("span");
+                    itemTitle.className = "edit-item-title";
+                    itemTitle.textContent = item.name || `Item ${itemIndex + 1}`;
+
+                    const itemQty = document.createElement("span");
+                    itemQty.className = "edit-item-qty";
+                    itemQty.textContent = item.quantity || "quantity";
+
+                    const removeItemBtn = document.createElement("button");
+                    removeItemBtn.className = "delete-btn";
+                    removeItemBtn.type = "button";
+                    removeItemBtn.textContent = "×";
+                    removeItemBtn.setAttribute("aria-label", `Delete ${item.name}`);
+                    removeItemBtn.addEventListener("click", () => {
+                        removeDraftItem(category.id, item.id);
+                    });
+
+                    topRow.appendChild(itemTitle);
+                    topRow.appendChild(itemQty);
+                    topRow.appendChild(removeItemBtn);
+
+                    const nameField = document.createElement("div");
+                    nameField.className = "edit-item-field";
+                    const nameLabel = document.createElement("label");
+                    nameLabel.textContent = "Name:";
+                    const nameInput = document.createElement("input");
+                    nameInput.type = "text";
+                    nameInput.value = item.name;
+                    nameInput.addEventListener("input", () => {
+                        item.name = nameInput.value;
+                        itemTitle.textContent = item.name || `Item ${itemIndex + 1}`;
+                    });
+                    nameField.appendChild(nameLabel);
+                    nameField.appendChild(nameInput);
+
+                    const qtyField = document.createElement("div");
+                    qtyField.className = "edit-item-field";
+                    const qtyLabel = document.createElement("label");
+                    qtyLabel.textContent = "Quantity:";
+                    const qtyInput = document.createElement("input");
+                    qtyInput.type = "text";
+                    qtyInput.value = item.quantity;
+                    qtyInput.addEventListener("input", () => {
+                        item.quantity = qtyInput.value;
+                        itemQty.textContent = item.quantity || "quantity";
+                    });
+                    qtyField.appendChild(qtyLabel);
+                    qtyField.appendChild(qtyInput);
+
+                    block.appendChild(topRow);
+                    block.appendChild(nameField);
+                    block.appendChild(qtyField);
+                    itemsContainer.appendChild(block);
+                });
+            }
+
+            details.appendChild(itemsContainer);
+            return details;
+        }
+
+        function renderDetailFrame() {
+            detailFrame.innerHTML = "";
+
+            const currentList = state.isEditing ? state.draftList : findListById(state.selectedListId);
+            if (!currentList) {
+                return;
+            }
+
+            const categories = Array.isArray(currentList.categories) ? currentList.categories : [];
+            categories.forEach((category, index) => {
+                const categoryBlock = state.isEditing
+                    ? renderEditCategory(category, index)
+                    : renderPreviewCategory(category, index === 0);
+                detailFrame.appendChild(categoryBlock);
+            });
+        }
+
+        function renderDetailHeader() {
+            const selectedList = findListById(state.selectedListId);
+            if (!selectedList) {
+                return;
+            }
+
+            if (state.isEditing) {
+                viewModeTitle.classList.add("hidden");
+                editHeader.classList.remove("hidden");
+                editListNameInput.value = state.draftList.name;
+            } else {
+                viewModeTitle.classList.remove("hidden");
+                editHeader.classList.add("hidden");
+                viewModeTitle.textContent = selectedList.name || "Preview List Name";
+            }
+        }
+
+        function renderActionRow() {
+            const editing = state.isEditing;
+            actionRow.classList.toggle("save-only", editing);
+            activateBtn.classList.toggle("hidden", editing);
+            editBtn.classList.toggle("hidden", editing);
+            deleteBtn.classList.toggle("hidden", editing);
+            saveBtn.classList.toggle("hidden", !editing);
+
+            activateBtn.style.display = editing ? "none" : "";
+            editBtn.style.display = editing ? "none" : "";
+            deleteBtn.style.display = editing ? "none" : "";
+            saveBtn.style.display = editing ? "" : "none";
+            activateBtn.textContent = state.selectedListId === state.activeListId ? "Activated" : "Activate";
+        }
+
+        function renderDetailView() {
+            renderDetailHeader();
+            renderActionRow();
+            renderDetailFrame();
+        }
+
+        function openDetailView() {
+            profileListView.classList.add("hidden");
+            detailView.classList.remove("hidden");
+            setStatus("");
+            renderDetailView();
+        }
+
+        function closeDetailView() {
+            detailView.classList.add("hidden");
+            profileListView.classList.remove("hidden");
+            state.isEditing = false;
+            state.draftList = null;
+            setStatus("");
+            renderListRows();
+        }
+
+        document.getElementById("backToListsBtn").addEventListener("click", closeDetailView);
+
+        activateBtn.addEventListener("click", () => {
+            if (!state.selectedListId) {
+                return;
+            }
+            state.activeListId = state.selectedListId;
+            persistState();
+            renderActionRow();
+            renderListRows();
+            setStatus("List set as active.");
+        });
+
+        editBtn.addEventListener("click", () => {
+            const selectedList = findListById(state.selectedListId);
+            if (!selectedList) {
+                return;
+            }
+            state.isEditing = true;
+            state.draftList = cloneList(selectedList);
+            renderDetailView();
+        });
+
+        deleteBtn.addEventListener("click", () => {
+            if (!state.selectedListId) {
+                return;
+            }
+
+            state.lists = state.lists.filter((list) => list.id !== state.selectedListId);
+            if (state.activeListId === state.selectedListId) {
+                state.activeListId = state.lists[0]?.id || null;
+            }
+            persistState();
+            closeDetailView();
+        });
+
+        editListNameInput.addEventListener("input", () => {
+            if (!state.draftList) {
+                return;
+            }
+            state.draftList.name = editListNameInput.value;
+        });
+
+        saveBtn.addEventListener("click", () => {
+            if (!state.draftList || !state.selectedListId) {
+                return;
+            }
+
+            const updatedName = (state.draftList.name || "").trim();
+            state.draftList.name = updatedName || "List Name";
+
+            const listIndex = state.lists.findIndex((list) => list.id === state.selectedListId);
+            if (listIndex === -1) {
+                return;
+            }
+
+            state.lists[listIndex] = cloneList(state.draftList);
+            persistState();
+
+            state.isEditing = false;
+            state.draftList = cloneList(state.lists[listIndex]);
+            setStatus("Changes saved.");
+            renderListRows();
+            renderDetailView();
+        });
+
+        ensureState();
+        renderListRows();
+
+        if (openListId && findListById(openListId)) {
+            state.selectedListId = openListId;
+            state.isEditing = false;
+            state.draftList = cloneList(findListById(openListId));
+            openDetailView();
+        }
+    </script>
+</body>
+</html>
