@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create List</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #e5e5e5;
+            color: #111;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 420px;
+            min-height: 100vh;
+            margin: 0 auto;
+        }
+
+        .view {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 14px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .editor-form {
+            margin-top: 92px;
+            padding: 0 6px;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 145px 1fr;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .field-row label {
+            font-size: 43px;
+            line-height: 1;
+        }
+
+        .field-row input {
+            width: 100%;
+            height: 46px;
+            border: 1px solid #616161;
+            background: transparent;
+            font-size: 21px;
+            padding: 0 10px;
+            color: #111;
+        }
+
+        .category-add-row {
+            grid-template-columns: 145px 1fr auto;
+        }
+
+        .category-add-btn {
+            border: none;
+            background: transparent;
+            color: #111;
+            font-size: 65px;
+            line-height: 1;
+            height: 46px;
+            width: 44px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .category-wrap {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 11px;
+            margin: 8px 0 22px;
+            padding-left: 24px;
+            min-height: 30px;
+        }
+
+        .category-chip {
+            border: 1px solid #616161;
+            background: #d0d0d0;
+            color: #222;
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            padding: 7px 28px 7px 13px;
+            font-size: 13px;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .category-chip.selected {
+            background: #747474;
+            color: #fff;
+        }
+
+        .chip-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #7a7a7a;
+            background: #bdbdbd;
+            color: #111;
+            font-size: 11px;
+            line-height: 1;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .section-title {
+            font-size: 44px;
+            margin: 4px 0 13px;
+            line-height: 1;
+        }
+
+        .solid-btn {
+            border: 1px solid #000;
+            background: #000;
+            color: #fff;
+            font-size: 42px;
+            line-height: 1;
+            min-width: 96px;
+            height: 50px;
+            padding: 0 20px;
+            cursor: pointer;
+        }
+
+        .add-item-row {
+            display: flex;
+            justify-content: flex-end;
+            margin: 4px 0 16px;
+        }
+
+        .status-message {
+            min-height: 20px;
+            margin: 0 0 12px;
+            padding-left: 24px;
+            font-size: 13px;
+            color: #8b1f1f;
+        }
+
+        .preview-link {
+            border: none;
+            background: transparent;
+            color: #111;
+            font-size: 21px;
+            text-decoration: underline;
+            display: block;
+            margin: 112px auto 34px;
+            cursor: pointer;
+        }
+
+        .create-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 18px;
+            padding-right: 24px;
+        }
+
+        .bottom-nav {
+            margin-top: auto;
+            border: 1px solid #777;
+            height: 108px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 30px;
+            background: #efefef;
+        }
+
+        .icon-button {
+            border: none;
+            background: transparent;
+            padding: 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .icon-button:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        .icon-button img {
+            width: 38px;
+            height: 38px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .preview-header {
+            margin-top: 52px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .back-link {
+            color: #111;
+            text-decoration: none;
+            font-size: 38px;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 0, 0, 0.07);
+        }
+
+        .preview-title {
+            margin: 0;
+            font-size: 48px;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        .preview-frame {
+            margin: 26px auto 0;
+            width: calc(100% - 34px);
+            max-width: 326px;
+            height: 540px;
+            max-height: calc(100vh - 250px);
+            border: 1px solid #777;
+            background: transparent;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .preview-category {
+            border-bottom: 1px solid #777;
+        }
+
+        .preview-category-toggle {
+            list-style: none;
+            height: 53px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 25px;
+            font-weight: 400;
+            text-align: center;
+            cursor: pointer;
+            background: #e5e5e5;
+        }
+
+        .preview-category-toggle::-webkit-details-marker {
+            display: none;
+        }
+
+        .preview-category-toggle::marker {
+            content: "";
+        }
+
+        .preview-category-items {
+            background: #e5e5e5;
+        }
+
+        .preview-item-row {
+            height: 39px;
+            border-top: 1px solid #777;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 0 8px;
+            font-size: 14px;
+            color: #222;
+        }
+
+        .preview-item-qty {
+            font-size: 12px;
+            color: #444;
+        }
+
+        .preview-empty-row {
+            border-top: 1px solid #777;
+            height: 39px;
+        }
+
+        @media (max-width: 380px) {
+            .field-row {
+                grid-template-columns: 120px 1fr;
+            }
+
+            .category-add-row {
+                grid-template-columns: 120px 1fr auto;
+            }
+
+            .field-row label,
+            .section-title {
+                font-size: 34px;
+            }
+
+            .preview-title {
+                font-size: 40px;
+            }
+
+            .preview-category-toggle {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <section class="view" id="editorView">
+            <div class="editor-form">
+                <div class="field-row">
+                    <label for="listNameInput">List Name:</label>
+                    <input id="listNameInput" type="text" />
+                </div>
+
+                <div class="field-row category-add-row">
+                    <label for="categoryInput">Categories:</label>
+                    <input id="categoryInput" type="text" />
+                    <button class="category-add-btn" id="addCategoryBtn" type="button" aria-label="Add category">+</button>
+                </div>
+
+                <div class="category-wrap" id="categoryWrap" aria-live="polite"></div>
+
+                <div class="section-title">Add Item:</div>
+
+                <div class="field-row">
+                    <label for="itemNameInput">Name:</label>
+                    <input id="itemNameInput" type="text" />
+                </div>
+
+                <div class="field-row">
+                    <label for="itemQtyInput">Quantity:</label>
+                    <input id="itemQtyInput" type="text" />
+                </div>
+
+                <div class="add-item-row">
+                    <button class="solid-btn" id="addItemBtn" type="button">Add</button>
+                </div>
+
+                <p class="status-message" id="statusMessage"></p>
+
+                <button class="preview-link" id="openPreviewBtn" type="button">preview_list</button>
+
+                <div class="create-row">
+                    <button class="solid-btn" type="button">Create</button>
+                </div>
+            </div>
+
+            <nav class="bottom-nav" aria-label="Bottom navigation">
+                <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
+                    <img src="/images/home_icon.png" alt="Home icon" />
+                </a>
+                <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
+                    <img src="/images/plus_icon.png" alt="Plus icon" />
+                </a>
+                <a class="icon-button" href="{{ url_for('items_bp.active_list_page', demo=1) if demo_mode else url_for('items_bp.active_list_page') }}" aria-label="List">
+                    <img src="/images/list_icon.png" alt="List icon" />
+                </a>
+            </nav>
+        </section>
+
+        <section class="view hidden" id="previewView">
+            <header class="preview-header">
+                <button class="back-link" id="closePreviewBtn" type="button" aria-label="Back">&#8592;</button>
+                <h1 class="preview-title" id="previewTitle">Preview List Name</h1>
+            </header>
+
+            <section class="preview-frame" id="previewFrame" aria-label="Preview list"></section>
+
+            <nav class="bottom-nav" aria-label="Bottom navigation">
+                <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
+                    <img src="/images/home_icon.png" alt="Home icon" />
+                </a>
+                <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
+                    <img src="/images/plus_icon.png" alt="Plus icon" />
+                </a>
+                <a class="icon-button" href="{{ url_for('items_bp.active_list_page', demo=1) if demo_mode else url_for('items_bp.active_list_page') }}" aria-label="List">
+                    <img src="/images/list_icon.png" alt="List icon" />
+                </a>
+            </nav>
+        </section>
+    </main>
+
+    <script>
+        const state = {
+            categories: [],
+            selectedCategoryId: null,
+            nextCategoryId: 1,
+        };
+        const params = new URLSearchParams(window.location.search);
+        const demoMode = params.get("demo") === "1";
+        const previewMode = params.get("view") === "preview";
+
+        const categoryWrap = document.getElementById("categoryWrap");
+        const statusMessage = document.getElementById("statusMessage");
+        const categoryInput = document.getElementById("categoryInput");
+        const listNameInput = document.getElementById("listNameInput");
+        const itemNameInput = document.getElementById("itemNameInput");
+        const itemQtyInput = document.getElementById("itemQtyInput");
+        const previewTitle = document.getElementById("previewTitle");
+        const previewFrame = document.getElementById("previewFrame");
+        const editorView = document.getElementById("editorView");
+        const previewView = document.getElementById("previewView");
+
+        function setMessage(message) {
+            statusMessage.textContent = message;
+        }
+
+        function renderCategoryChips() {
+            categoryWrap.innerHTML = "";
+            state.categories.forEach((category) => {
+                const chip = document.createElement("div");
+                chip.className = "category-chip";
+                if (state.selectedCategoryId === category.id) {
+                    chip.classList.add("selected");
+                }
+
+                chip.setAttribute("role", "button");
+                chip.setAttribute("tabindex", "0");
+                chip.setAttribute("aria-pressed", String(state.selectedCategoryId === category.id));
+
+                chip.addEventListener("click", () => {
+                    if (state.selectedCategoryId === category.id) {
+                        state.selectedCategoryId = null;
+                    } else {
+                        state.selectedCategoryId = category.id;
+                    }
+                    renderCategoryChips();
+                });
+
+                chip.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        chip.click();
+                    }
+                });
+
+                const text = document.createElement("span");
+                text.textContent = category.name;
+
+                const removeButton = document.createElement("button");
+                removeButton.className = "chip-remove";
+                removeButton.type = "button";
+                removeButton.textContent = "x";
+                removeButton.setAttribute("aria-label", `Delete ${category.name}`);
+                removeButton.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    state.categories = state.categories.filter((item) => item.id !== category.id);
+                    if (state.selectedCategoryId === category.id) {
+                        state.selectedCategoryId = null;
+                    }
+                    renderCategoryChips();
+                    renderPreview();
+                });
+
+                chip.appendChild(text);
+                chip.appendChild(removeButton);
+                categoryWrap.appendChild(chip);
+            });
+        }
+
+        function getPreviewCategories() {
+            if (state.categories.length > 0) {
+                return state.categories;
+            }
+            return [
+                { id: 1, name: "Category 1", items: [] },
+                { id: 2, name: "Category 2", items: [] },
+                { id: 3, name: "Category 3", items: [] },
+            ];
+        }
+
+        function renderPreview() {
+            const listName = listNameInput.value.trim();
+            previewTitle.textContent = listName || "Preview List Name";
+            previewFrame.innerHTML = "";
+
+            const previewCategories = getPreviewCategories();
+            previewCategories.forEach((category, index) => {
+                const details = document.createElement("details");
+                details.className = "preview-category";
+                if (index === 0) {
+                    details.open = true;
+                }
+
+                const summary = document.createElement("summary");
+                summary.className = "preview-category-toggle";
+                summary.textContent = category.name;
+
+                const itemsContainer = document.createElement("div");
+                itemsContainer.className = "preview-category-items";
+
+                if (category.items.length === 0) {
+                    const empty = document.createElement("div");
+                    empty.className = "preview-empty-row";
+                    itemsContainer.appendChild(empty);
+                } else {
+                    category.items.forEach((item) => {
+                        const row = document.createElement("div");
+                        row.className = "preview-item-row";
+
+                        const name = document.createElement("span");
+                        name.textContent = item.name;
+
+                        const qty = document.createElement("span");
+                        qty.className = "preview-item-qty";
+                        qty.textContent = item.quantity;
+
+                        row.appendChild(name);
+                        row.appendChild(qty);
+                        itemsContainer.appendChild(row);
+                    });
+                }
+
+                details.appendChild(summary);
+                details.appendChild(itemsContainer);
+                previewFrame.appendChild(details);
+            });
+        }
+
+        function addCategory() {
+            const categoryName = categoryInput.value.trim();
+            if (!categoryName) {
+                setMessage("Enter a category first.");
+                return;
+            }
+
+            state.categories.push({
+                id: state.nextCategoryId,
+                name: categoryName,
+                items: [],
+            });
+            state.nextCategoryId += 1;
+            categoryInput.value = "";
+            setMessage("");
+            renderCategoryChips();
+            renderPreview();
+        }
+
+        function addItem() {
+            if (state.selectedCategoryId === null) {
+                setMessage("Select a category before adding an item.");
+                return;
+            }
+
+            const itemName = itemNameInput.value.trim();
+            const itemQuantity = itemQtyInput.value.trim();
+            if (!itemName || !itemQuantity) {
+                setMessage("Enter both item name and quantity.");
+                return;
+            }
+
+            const selectedCategory = state.categories.find((category) => category.id === state.selectedCategoryId);
+            if (!selectedCategory) {
+                setMessage("Selected category was not found.");
+                return;
+            }
+
+            selectedCategory.items.push({
+                name: itemName,
+                quantity: itemQuantity,
+            });
+
+            itemNameInput.value = "";
+            itemQtyInput.value = "";
+            setMessage("");
+            renderPreview();
+        }
+
+        function openPreview() {
+            renderPreview();
+            editorView.classList.add("hidden");
+            previewView.classList.remove("hidden");
+        }
+
+        function closePreview() {
+            previewView.classList.add("hidden");
+            editorView.classList.remove("hidden");
+        }
+
+        function loadDemoData() {
+            listNameInput.value = "Preview List Name";
+            state.categories = [
+                {
+                    id: 1,
+                    name: "Category 1",
+                    items: [
+                        { name: "Item 1", quantity: "quantity" },
+                        { name: "Item 2", quantity: "quantity" },
+                        { name: "Item 3", quantity: "quantity" },
+                        { name: "Item 4", quantity: "quantity" },
+                    ],
+                },
+                {
+                    id: 2,
+                    name: "Category 2",
+                    items: [],
+                },
+                {
+                    id: 3,
+                    name: "Category 3",
+                    items: [],
+                },
+            ];
+            state.selectedCategoryId = null;
+            state.nextCategoryId = 4;
+        }
+
+        document.getElementById("addCategoryBtn").addEventListener("click", addCategory);
+        document.getElementById("addItemBtn").addEventListener("click", addItem);
+        document.getElementById("openPreviewBtn").addEventListener("click", openPreview);
+        document.getElementById("closePreviewBtn").addEventListener("click", closePreview);
+
+        categoryInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                addCategory();
+            }
+        });
+
+        if (demoMode) {
+            loadDemoData();
+        }
+
+        renderCategoryChips();
+        renderPreview();
+
+        if (previewMode) {
+            openPreview();
+        }
+    </script>
+</body>
+</html>

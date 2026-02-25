@@ -54,6 +54,12 @@
             text-decoration: underline;
             text-align: center;
             overflow-wrap: anywhere;
+            color: #000;
+            display: inline-block;
+        }
+
+        .active-list:hover {
+            opacity: 0.75;
         }
 
         .bottom-nav {
@@ -116,15 +122,15 @@
 
         <div class="logo-box">Logo</div>
 
-        <div class="active-list">active list name</div>
+        <a class="active-list" href="{{ url_for('items_bp.active_list_page', demo=1) if demo_mode else url_for('items_bp.active_list_page') }}">active list name</a>
 
         <div class="bottom-nav">
             <button class="icon-button" type="button" aria-label="Home">
                 <img src="/images/home_icon.png" alt="Home icon" />
             </button>
-            <button class="icon-button" type="button" aria-label="Add">
+            <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
                 <img src="/images/plus_icon.png" alt="Plus icon" />
-            </button>
+            </a>
             <button class="icon-button" type="button" aria-label="List">
                 <img src="/images/list_icon.png" alt="List icon" />
             </button>

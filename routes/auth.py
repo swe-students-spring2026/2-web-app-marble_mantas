@@ -96,4 +96,5 @@ def settings():
 
 @auth_bp.route("/home", methods=["GET"])
 def home():
-    return render_template("home.html")
+    demo_mode = request.args.get("demo") == "1"
+    return render_template("home.html", demo_mode=demo_mode)
