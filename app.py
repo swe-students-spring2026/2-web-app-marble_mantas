@@ -6,7 +6,7 @@ from routes.items import items_bp
 from routes.auth import auth_bp, User
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder="images", static_url_path="/images")
 
     # Configure secret key for session management
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "devsecretkeychangeme")
