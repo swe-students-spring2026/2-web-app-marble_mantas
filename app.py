@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask import Flask, jsonify, redirect, render_template, url_for
 from flask_login import LoginManager, current_user
 from routes.items import items_bp
 from routes.auth import auth_bp, User
@@ -33,8 +33,6 @@ def create_app():
 
     @app.get("/")
     def home():
-        if request.args.get("demo") == "1":
-            return redirect(url_for("auth_bp.home", demo=1))
         return render_template("login.html")
     
     return app
