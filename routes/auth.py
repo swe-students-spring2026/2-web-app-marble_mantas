@@ -96,9 +96,6 @@ def settings():
 
 @auth_bp.route("/home", methods=["GET"])
 def home():
-<<<<<<< HEAD
-    return render_template("home.html")
-=======
     demo_mode = request.args.get("demo") == "1"
     return render_template("home.html", demo_mode=demo_mode)
 
@@ -107,4 +104,3 @@ def home():
 def profile():
     demo_mode = request.args.get("demo") == "1"
     return render_template("profile.html", demo_mode=demo_mode)
->>>>>>> a53422a (adding frontend bug fixes)

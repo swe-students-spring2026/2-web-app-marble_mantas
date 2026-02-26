@@ -54,6 +54,12 @@
             text-decoration: underline;
             text-align: center;
             overflow-wrap: anywhere;
+            color: #000;
+            display: inline-block;
+        }
+
+        .active-list:hover {
+            opacity: 0.75;
         }
 
         .bottom-nav {
@@ -122,9 +128,9 @@
             <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
                 <img src="/images/home_icon.png" alt="Home icon" />
             </a>
-            <button class="icon-button" type="button" aria-label="Add">
+            <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
                 <img src="/images/plus_icon.png" alt="Plus icon" />
-            </button>
+            </a>
             <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
                 <img src="/images/list_icon.png" alt="Profile icon" />
             </a>
