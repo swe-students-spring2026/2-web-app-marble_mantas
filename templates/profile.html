@@ -402,13 +402,13 @@
 
             <nav class="bottom-nav" aria-label="Bottom navigation">
                 <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
-                    <img src="/images/home_icon.png" alt="Home icon" />
+                    <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
                 </a>
                 <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
-                    <img src="/images/plus_icon.png" alt="Plus icon" />
+                    <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
                 </a>
                 <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
-                    <img src="/images/list_icon.png" alt="Profile icon" />
+                    <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
                 </a>
             </nav>
         </section>
@@ -436,13 +436,13 @@
 
             <nav class="bottom-nav" aria-label="Bottom navigation">
                 <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
-                    <img src="/images/home_icon.png" alt="Home icon" />
+                    <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
                 </a>
                 <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
-                    <img src="/images/plus_icon.png" alt="Plus icon" />
+                    <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
                 </a>
                 <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
-                    <img src="/images/list_icon.png" alt="Profile icon" />
+                    <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
                 </a>
             </nav>
         </section>
