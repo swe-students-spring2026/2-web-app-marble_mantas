@@ -48,10 +48,15 @@ def shopping_list():
     shopping_items = [serialize_item(item) for item in items.find({"status": "to_buy", "user_id": current_user.id})]
     return render_template("shopping_list.html", items=shopping_items)
 
+@items_bp.get("/active")
+def active_list_page():
+    demo_mode = request.args.get("demo") == "1"
+    return render_template("active_list.html", demo_mode=demo_mode)
+
 @items_bp.get("/create")
-@login_required
 def create_item_form():
-    return render_template("items_form.html", item=None, error=None)
+    demo_mode = request.args.get("demo") == "1"
+    return render_template("items_form.html", item=None, error=None, demo_mode=demo_mode)
 
 @items_bp.post("")
 @login_required

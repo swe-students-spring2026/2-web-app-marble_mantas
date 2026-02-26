@@ -211,15 +211,15 @@
 		</div>
 
 		<nav class="bottom-nav" aria-label="Bottom navigation">
-			<button class="icon-button" type="button" aria-label="Home">
-				<img src="images/home_icon.png" alt="Home icon" />
-			</button>
-			<button class="icon-button" type="button" aria-label="Add">
-				<img src="images/plus_icon.png" alt="Plus icon" />
-			</button>
-			<button class="icon-button" type="button" aria-label="List">
-				<img src="images/list_icon.png" alt="List icon" />
-			</button>
+			<a class="icon-button" href="{{ url_for('auth_bp.home') }}" aria-label="Home">
+				<img src="/images/home_icon.png" alt="Home icon" />
+			</a>
+			<a class="icon-button" href="{{ url_for('items_bp.create_item_form') }}" aria-label="Add">
+				<img src="/images/plus_icon.png" alt="Plus icon" />
+			</a>
+			<a class="icon-button" href="{{ url_for('auth_bp.profile') }}" aria-label="Profile">
+				<img src="/images/list_icon.png" alt="Profile icon" />
+			</a>
 		</nav>
 	</main>
 </body>
