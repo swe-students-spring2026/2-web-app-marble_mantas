@@ -19,7 +19,7 @@ body {
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding: calc(env(safe-area-inset-top) + 34px) 20px env(safe-area-inset-bottom);
+    padding: calc(env(safe-area-inset-top) + 34px) 16px calc(env(safe-area-inset-bottom) + 8px);
 }
 
 .title {
@@ -57,12 +57,13 @@ body {
 
 .bottom-nav {
     margin-top: auto;
-    border: 1px solid #000;
-    height: 110px;
+    flex-shrink: 0;
+    border: 1px solid #777;
+    height: 90px;
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding: 0 28px;
+    padding: 0 18px;
     background: #efefef;
 }
 
@@ -75,6 +76,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    text-decoration: none;
 }
 
 .icon-button:hover {
@@ -87,8 +89,8 @@ body {
 }
 
 .icon-button img {
-    width: 46px;
-    height: 46px;
+    width: 34px;
+    height: 34px;
     object-fit: contain;
     display: block;
 }
