@@ -28,6 +28,29 @@ def serialize_item(doc):
         "updated_at": doc.get("updated_at"),
     }
 
+def validate_and_parse_item(form):
+    name = (form.get("name") or "").strip()
+    if not name:
+        return None, "Name is required"
+        
+    try:
+        qty = int(form.get("quantity", 1))
+        if qty < 1: raise ValueError
+    except (TypeError, ValueError):
+        return None, "Quantity must be at least 1"
+        
+    status = form.get("status", "to_buy")
+    if status not in ALLOWED_STATUSES:
+        return None, "Invalid status"
+        
+    return {
+        "name": name,
+        "quantity": qty,
+        "status": status,
+        "category": form.get("category", ""),
+        "updated_at": datetime.now()
+    }, None
+
 
 @items_bp.get("")
 @login_required
@@ -61,29 +84,12 @@ def create_item_form():
 @items_bp.post("")
 @login_required
 def create_item():
-    name = (request.form.get("name") or "").strip()
-    if not name:
-        return render_template("items_form.html", item=None, error="Name is required")
-
-    quantity = parse_quantity(request.form.get("quantity", 1))
-    if quantity is None:
-        return render_template("items_form.html", item=None, error="Quantity must be a number")
-    if quantity <= 0:
-        return render_template("items_form.html", item=None, error="Quantity must be at least 1")
-
-    status = request.form.get("status", "to_buy")
-    if status not in ALLOWED_STATUSES:
-        return render_template("items_form.html", item=None, error="Invalid status")
-    item_doc = {
-        "name": name,
-        "quantity": quantity,
-        "status": status,
-        "category": request.form.get("category", ""),
-        "user_id": current_user.id,
-        "created_at": datetime.now(),
-        "updated_at": datetime.now(),
-    }
-    items.insert_one(item_doc)
+    data, error = validate_and_parse_item(request.form)
+    if error:
+         return render_template("items_form.html", item=request.form, error=error)
+    data["user_id"] = current_user.id
+    data["created_at"] = datetime.now()
+    items.insert_one(data)
     return redirect(url_for("items_bp.list_items"))
 
 @items_bp.get("/<item_id>/edit")
@@ -98,34 +104,29 @@ def edit_item_form(item_id):
 @items_bp.post("/<item_id>/edit")
 @login_required
 def update_item(item_id):
-    name = (request.form.get("name") or "").strip()
-    if not name:
-        return render_template("items_form.html", item=None, error="Name cannot be empty")
-
-    quantity = parse_quantity(request.form.get("quantity", 1))
-    if quantity is None:
-        return render_template("items_form.html", item=None, error="Quantity must be a number")
-    if quantity <= 0:
-        return render_template("items_form.html", item=None, error="Quantity must be at least 1")
-    status = request.form.get("status", "to_buy")
-    if status not in ALLOWED_STATUSES:
-        return render_template("items_form.html", item=None, error="Invalid status")
+    updates, error = validate_and_parse_item(request.form)
+    if error:
+        item_data = request.form.to_dict()
+        item_data['id'] = item_id
+        return render_template("items_form.html", item=item_data, error=error)
     
-    updates = {
-        "name": name,
-        "quantity": quantity,
-        "status": status,
-        "category": request.form.get("category", ""),
-        "updated_at": datetime.now(),
-    }
-    result = items.update_one({"_id": ObjectId(item_id), "user_id": current_user.id}, {"$set": updates})
+    result = items.update_one(
+        {"_id": ObjectId(item_id), "user_id": current_user.id}, 
+        {"$set": updates}
+    )
     if result.matched_count == 0:
-        return render_template("items_form.html", item=None, error="Item not found"), 404
+        return render_template("items_form.html", item=None, error="Item not found or access denied"), 404
     
     return redirect(url_for("items_bp.list_items"))
 
 @items_bp.post("/<item_id>/delete")
 @login_required
 def delete_item(item_id):
-    items.delete_one({"_id": ObjectId(item_id)})
+    result = items.delete_one({
+        "_id": ObjectId(item_id), 
+        "user_id": current_user.id
+    })
+    # flash a message
+    if result.deleted_count == 0:
+        return render_template("items_list.html", error="Item not found or access denied"), 404
     return redirect(url_for("items_bp.list_items"))
