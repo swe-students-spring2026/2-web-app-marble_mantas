@@ -10,6 +10,11 @@
     <main class="register-card">
         <h1>Sign In</h1>
 
+        {% if error %}
+        <script>
+            alert("{{ error }}");
+        </script>
+        {% endif %}
 
         <form method="post" action="{{ url_for('auth_bp.register') }}">
             <div class="field">
