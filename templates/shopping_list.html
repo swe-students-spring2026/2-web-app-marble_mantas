@@ -3,8 +3,9 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Shopping List</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/shopping_list.css') }}">
+	    <title>Shopping List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shopping_list.css') }}">
 </head>
 <body>
 	<main class="page">
@@ -50,9 +51,9 @@
 		</section>
 
 		<div class="action-row">
-			<button class="action-btn" type="button">Activate</button>
-			<button class="action-btn" type="button">Edit</button>
-			<button class="action-btn" type="button">Delete</button>
+			<button class="btn-primary btn-list-action" type="button">Activate</button>
+			<button class="btn-primary btn-list-action" type="button">Edit</button>
+			<button class="btn-primary btn-list-action" type="button">Delete</button>
 		</div>
 
 		<nav class="bottom-nav" aria-label="Bottom navigation">

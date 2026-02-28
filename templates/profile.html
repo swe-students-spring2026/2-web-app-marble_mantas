@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
 </head>
 <body>
@@ -44,12 +45,12 @@
 
             <section class="detail-frame" id="detailFrame" aria-label="List details"></section>
 
-            <div class="action-row" id="actionRow">
-                <button class="solid-btn" id="activateBtn" type="button">Activate</button>
-                <button class="solid-btn" id="editBtn" type="button">Edit</button>
-                <button class="solid-btn" id="deleteBtn" type="button">Delete</button>
-                <button class="solid-btn hidden" id="saveBtn" type="button">Save</button>
-            </div>
+            <section class="action-row" id="actionRow">
+                <button class="btn-primary btn-profile-action" id="activateBtn" type="button">Activate</button>
+                <button class="btn-primary btn-profile-action" id="editBtn" type="button">Edit</button>
+                <button class="btn-primary btn-profile-action" id="deleteBtn" type="button">Delete</button>
+                <button class="btn-primary hidden btn-profile-action" id="saveBtn" type="button">Save</button>
+            </section>
 
             <p class="status-text" id="statusText"></p>
 

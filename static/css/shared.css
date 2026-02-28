@@ -1,0 +1,143 @@
+:root {
+    --bg-color: #e5e5e5;
+    --text-color: #111;
+    --font-family: Arial, sans-serif;
+    --max-width: 393px;
+    --input-border: #666;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100dvh;
+    font-family: var(--font-family);
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* Common Layout Containers */
+.page, .login-card, .register-card, .container {
+    width: 100%;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    height: 100dvh; /* Make sure the container limits the height */
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    /* Padding bottom handles fixed nav */
+    padding: calc(env(safe-area-inset-top) + 20px) 16px calc(90px + env(safe-area-inset-bottom) + 20px);
+    overflow: hidden; /* Prevent body scroll if page content scrolls */
+}
+
+/* Common Typography */
+h1 {
+    font-weight: 400;
+    text-align: center;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Common Form Elements */
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    height: 44px;
+    border: 1px solid var(--input-border);
+    padding: 0 10px;
+    font-size: 1rem;
+    background: transparent;
+    width: 100%;
+    min-width: 0;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    padding: 0;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #000;
+    background: #000;
+    color: #fff;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+    opacity: 0.85;
+}
+
+/* Navigation Icons */
+.bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 18px;
+    background: #efefef; /* Standardize background */
+    border-top: 1px solid #777;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: var(--max-width);
+    height: 90px; /* Standardize height */
+    z-index: 100;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+}
+
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 8px;
+    color: inherit;
+}
+
+.icon-button:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.icon-button img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    display: block;
+}
+
+.error-msg {
+    color: #b00020;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Utility to center content if needed */
+.center-flex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
