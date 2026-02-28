@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings</title>
+</head>
+<body>
+    <main>
+        <h1>Settings</h1>
+        <p>Signed in as {{ username }}</p>
+        <form method="post" action="{{ url_for('auth_bp.logout') }}">
+            <button type="submit">Log out</button>
+        </form>
+    </main>
+</body>
+</html>

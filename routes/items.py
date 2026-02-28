@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import datetime
 from db import items
 from flask import Blueprint, request, render_template, redirect, url_for
@@ -21,6 +22,7 @@ def serialize_item(doc):
         "name": doc.get("name"),
         "quantity": doc.get("quantity"),
         "status": doc.get("status"),  # to_buy or pantry
+        "list": doc.get("list"),
         "category": doc.get("category"),
 
         # Optional: Include timestamps if you want to show when items were added/updated
@@ -29,6 +31,10 @@ def serialize_item(doc):
     }
 
 def validate_and_parse_item(form):
+    list_name = (form.get("list") or "").strip()
+    if not list_name:
+        return None, "List name is required"
+
     name = (form.get("name") or "").strip()
     if not name:
         return None, "Name is required"
@@ -44,62 +50,125 @@ def validate_and_parse_item(form):
         return None, "Invalid status"
         
     return {
+        "list": list_name,
         "name": name,
         "quantity": qty,
         "status": status,
-        "category": form.get("category", ""),
+        "category": (form.get("category") or "").strip(),
         "updated_at": datetime.now()
     }, None
+
+
+def get_user_items():
+    return [serialize_item(item) for item in items.find({"user_id": current_user.id})]
+
+
+def group_items_by_list(item_docs, status=None):
+    grouped = OrderedDict()
+    for item in item_docs:
+        if status and item.get("status") != status:
+            continue
+
+        list_name = item.get("list") or "My List" # in case list field is missing/empty, but shouldn't happen
+        category_name = item.get("category") or "Uncategorized" # in case category field is missing/empty, but shouldn't happen
+        list_entry = grouped.setdefault(
+            list_name,
+            {"name": list_name, "categories": OrderedDict(), "count": 0},
+        )
+        list_entry["count"] += 1
+        list_entry["categories"].setdefault(category_name, []).append(item)
+
+    lists = []
+    for list_entry in grouped.values():
+        lists.append(
+            {
+                "name": list_entry["name"],
+                "count": list_entry["count"],
+                "categories": [
+                    {"name": category_name, "items": category_items}
+                    for category_name, category_items in list_entry["categories"].items()
+                ],
+            }
+        )
+    return lists
+
+
+def build_form_context(item=None, error=None):
+    shopping_lists = group_items_by_list(get_user_items(), status="to_buy")
+    existing_lists = [entry["name"] for entry in shopping_lists]
+    existing_categories = []
+    for entry in shopping_lists:
+        for category in entry["categories"]:
+            if category["name"] not in existing_categories:
+                existing_categories.append(category["name"])
+
+    return {
+        "item": item,
+        "error": error,
+        "existing_lists": existing_lists,
+        "existing_categories": existing_categories,
+    }
 
 
 @items_bp.get("")
 @login_required
 def list_items():
-    pantry_items = [serialize_item(item) for item in items.find({"status": "pantry", "user_id": current_user.id})]
-    shopping_items = [serialize_item(item) for item in items.find({"status": "to_buy", "user_id": current_user.id})]
+    all_items = get_user_items()
+    pantry_items = [item for item in all_items if item["status"] == "pantry"]
+    shopping_items = [item for item in all_items if item["status"] == "to_buy"]
     return render_template("items_list.html", pantry_items=pantry_items, shopping_items=shopping_items)
 
 @items_bp.get("/pantry")
 @login_required
 def pantry_list():
-    pantry_items = [serialize_item(item) for item in items.find({"status": "pantry", "user_id": current_user.id})]
+    pantry_items = [item for item in get_user_items() if item["status"] == "pantry"]
     return render_template("pantry_list.html", items=pantry_items)
 
 @items_bp.get("/shopping")
 @login_required
 def shopping_list():
-    shopping_items = [serialize_item(item) for item in items.find({"status": "to_buy", "user_id": current_user.id})]
+    shopping_items = [item for item in get_user_items() if item["status"] == "to_buy"]
     return render_template("shopping_list.html", items=shopping_items)
 
 @items_bp.get("/active")
+@login_required
 def active_list_page():
-    demo_mode = request.args.get("demo") == "1"
-    return render_template("active_list.html", demo_mode=demo_mode)
+    shopping_lists = group_items_by_list(get_user_items(), status="to_buy")
+    selected_list_name = (request.args.get("list") or "").strip()
+    active_list = None
+    for entry in shopping_lists
+        if entry["name"] == selected_list_name:
+            active_list = entry
+            break
+    # If no list specified or not found, default to first list if it exists
+    if active_list is None and shopping_lists:
+        active_list = shopping_lists[0]
+    return render_template("active_list.html", active_list=active_list)
 
 @items_bp.get("/create")
+@login_required
 def create_item_form():
-    demo_mode = request.args.get("demo") == "1"
-    return render_template("items_form.html", item=None, error=None, demo_mode=demo_mode)
+    return render_template("items_form.html", **build_form_context())
 
 @items_bp.post("")
 @login_required
 def create_item():
     data, error = validate_and_parse_item(request.form)
     if error:
-         return render_template("items_form.html", item=request.form, error=error)
+         return render_template("items_form.html", **build_form_context(item=request.form.to_dict(), error=error))
     data["user_id"] = current_user.id
     data["created_at"] = datetime.now()
     items.insert_one(data)
-    return redirect(url_for("items_bp.list_items"))
+    return redirect(url_for("items_bp.active_list_page", list=data["list"]))
 
 @items_bp.get("/<item_id>/edit")
 @login_required
 def edit_item_form(item_id):
-    item_doc = items.find_one({"_id": ObjectId(item_id)})
+    item_doc = items.find_one({"_id": ObjectId(item_id), "user_id": current_user.id})
     if not item_doc:
-        return render_template("items_form.html", item=None, error="Item not found"), 404
+        return render_template("items_form.html", **build_form_context(error="Item not found")), 404
     item = serialize_item(item_doc)
-    return render_template("items_form.html", item=item, error=None)
+    return render_template("items_form.html", **build_form_context(item=item))
 
 @items_bp.post("/<item_id>/edit")
 @login_required
@@ -108,25 +177,28 @@ def update_item(item_id):
     if error:
         item_data = request.form.to_dict()
         item_data['id'] = item_id
-        return render_template("items_form.html", item=item_data, error=error)
+        return render_template("items_form.html", **build_form_context(item=item_data, error=error))
     
     result = items.update_one(
-        {"_id": ObjectId(item_id), "user_id": current_user.id}, 
+        {"_id": ObjectId(item_id), "user_id": current_user.id},
         {"$set": updates}
     )
     if result.matched_count == 0:
-        return render_template("items_form.html", item=None, error="Item not found or access denied"), 404
+        return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
     
-    return redirect(url_for("items_bp.list_items"))
+    return redirect(url_for("items_bp.active_list_page", list=updates["list"]))
 
 @items_bp.post("/<item_id>/delete")
 @login_required
 def delete_item(item_id):
+    item_doc = items.find_one({"_id": ObjectId(item_id), "user_id": current_user.id})
+    if not item_doc:
+        return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
+
     result = items.delete_one({
         "_id": ObjectId(item_id), 
         "user_id": current_user.id
     })
-    # flash a message
     if result.deleted_count == 0:
-        return render_template("items_list.html", error="Item not found or access denied"), 404
-    return redirect(url_for("items_bp.list_items"))
+        return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
+    return redirect(url_for("items_bp.active_list_page", list=item_doc.get("list") or "My List"))
