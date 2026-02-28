@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/items_form.css') }}">
 </head>
 <body>
@@ -36,7 +37,7 @@
                 </div>
 
                 <div class="add-item-row">
-                    <button class="solid-btn" id="addItemBtn" type="button">Add</button>
+                    <button class="btn-primary btn-form-action" id="addItemBtn" type="button">Add</button>
                 </div>
 
                 <p class="status-message" id="statusMessage"></p>
@@ -44,7 +45,7 @@
                 <button class="preview-link" id="openPreviewBtn" type="button">preview_list</button>
 
                 <div class="create-row">
-                    <button class="solid-btn" id="createListBtn" type="button">Create</button>
+                    <button class="btn-primary btn-form-action" id="createListBtn" type="button">Create</button>
                 </div>
             </div>
 

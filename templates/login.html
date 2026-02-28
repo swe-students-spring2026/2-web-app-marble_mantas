@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
@@ -27,7 +28,7 @@
                 <input type="password" id="password" name="password" autocomplete="current-password" required />
             </div>
 
-            <button type="submit">Login</button>
+            <button type="submit" class="btn-primary login-btn">Login</button>
         </form>
 
         <p class="signup"><a href="{{ url_for('auth_bp.register') }}">Sign Up</a></p>
