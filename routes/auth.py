@@ -1,9 +1,18 @@
 from flask_login import UserMixin, login_user, logout_user, login_required, current_user
 from flask import Blueprint, request, render_template, redirect, url_for
-from db import users
+from db import items, users
 from bson import ObjectId
 
 auth_bp = Blueprint("auth_bp", __name__, url_prefix="/auth")
+
+
+def get_user_lists(user_id: str):
+    list_names = []
+    for item in items.find({"user_id": user_id, "status": "to_buy"}):
+        list_name = (item.get("list") or "").strip() or "My List"
+        if list_name not in list_names:
+            list_names.append(list_name)
+    return list_names
 
 
 class User(UserMixin):
@@ -95,12 +104,15 @@ def settings():
 
 
 @auth_bp.route("/home", methods=["GET"])
+@login_required
 def home():
-    demo_mode = request.args.get("demo") == "1"
-    return render_template("home.html", demo_mode=demo_mode)
+    user_lists = get_user_lists(current_user.id)
+    active_list_name = user_lists[0] if user_lists else None
+    return render_template("home.html", active_list_name=active_list_name)
 
 
 @auth_bp.route("/profile", methods=["GET"])
+@login_required
 def profile():
-    demo_mode = request.args.get("demo") == "1"
-    return render_template("profile.html", demo_mode=demo_mode)
+    user_lists = get_user_lists(current_user.id)
+    return render_template("profile.html", username=current_user.username, lists=user_lists)
