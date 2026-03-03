@@ -12,8 +12,124 @@ PantryPal is a simple, mobile-friendly web application that helps users track pa
 
 ## Steps necessary to run the software
 
-See instructions. Delete this line and place instructions to download, configure, and run the software here.
+Make sure you have the following installed:
+
+- Python 3.10+
+- Pipenv
+- Docker (can be installed [here](https://www.docker.com/products/docker-desktop/))
+
+You can install Pipenv with:
+
+```bash
+pip install pipenv
+```
+
+---
+
+### 1. Clone the Repository & Go to Directory
+
+```bash
+git clone https://github.com/swe-students-spring2026/2-web-app-marble_mantas.git
+cd 2-web-app-marble_mantas
+```
+
+---
+### 2. Install Dependencies (Using Pipfile)
+
+Since this project includes a `Pipfile`, install all dependencies with:
+
+```bash
+pipenv install
+```
+
+Then activate the virtual environment:
+
+```bash
+pipenv shell
+```
+
+---
+
+### 3. Configure Environment Variables
+
+Rename the example environment file:
+
+Mac / Linux:
+
+```bash
+mv env.example .env
+```
+
+Windows (Powershell):
+
+```powershell
+rename env.example .env
+```
+
+You can manually change the name too.
+Make sure your `.env` file contains the correct configuration values.
+
+---
+
+### 4. Start MongoDB with Docker
+
+```bash
+docker run --name mongodb_pantrypal \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=secret \
+  -d mongo:latest
+```
+To verify the container is running:
+
+```bash
+docker ps
+```
+
+---
+
+### 5. Run the Flask Application
+
+```bash
+flask run
+```
+
+---
+
+### 6. Open in Browser
+
+Visit:
+
+```
+http://127.0.0.1:5000
+```
+
+---
+
+### Troubleshooting
+
+- Make sure Docker is running.
+- Make sure Docker container is running.
+- Make sure your `.env` file exists.
+- If port `27017` is already in use, stop any existing MongoDB instances, or configure `.env` to use a different port, and set up MongoDB using that port.
+- If Flask does not start, ensure you activated the pipenv shell.
+
+### Stopping the Application
+
+To stop the Docker container:
+
+```bash
+docker stop mongodb_pantrypal
+```
+
+To remove the container:
+
+```bash
+docker rm mongodb_pantrypal
+```
 
 ## Task boards
 
 [Link to the Sprint 1 task board.](https://github.com/orgs/swe-students-spring2026/projects/7/views/1)
+
+[Link to the Sprint 1 task board.](https://github.com/orgs/swe-students-spring2026/projects/46/views/1)
