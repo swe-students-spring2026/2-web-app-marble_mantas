@@ -136,7 +136,7 @@ def active_list_page():
     shopping_lists = group_items_by_list(get_user_items(), status="to_buy")
     selected_list_name = (request.args.get("list") or "").strip()
     active_list = None
-    for entry in shopping_lists
+    for entry in shopping_lists:
         if entry["name"] == selected_list_name:
             active_list = entry
             break
