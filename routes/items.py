@@ -202,3 +202,19 @@ def delete_item(item_id):
     if result.deleted_count == 0:
         return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
     return redirect(url_for("items_bp.active_list_page", list=item_doc.get("list") or "My List"))
+
+
+def item_search(search_term, status = None):
+    cleaned_term = (search_term or "").strip()
+    if not cleaned_term and not status:
+        return []  # Return nothing if no search term or status filter provided
+    
+    query = {
+        "user_id": current_user.id, 
+        "name": {"$regex": cleaned_term, "$options": "i"}
+    }
+    
+    if status in ALLOWED_STATUSES:
+        query["status"] = status
+
+    return [serialize_item(item) for item in items.find(query)]
