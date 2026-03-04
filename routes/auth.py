@@ -1,4 +1,4 @@
-from flask_login import UserMixin, login_user, logout_user, login_required, current_user
+from flask_login import login_user, logout_user, login_required, current_user
 from flask import Blueprint, request, render_template, redirect, url_for
 from db import items, users
 from bson import ObjectId
@@ -15,18 +15,36 @@ def get_user_lists(user_id: str):
     return list_names
 
 
-class User(UserMixin):
+class User:
     def __init__(self, user_doc: dict):
         self.id = str(user_doc["_id"])
         self.username = user_doc["username"]
         self.password = user_doc["password"]
         self.doc = user_doc
 
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self.id
+
     @staticmethod
     def get_by_id(user_id: str):
-        user_doc = users.find_one({"_id": ObjectId(user_id)})
-        if user_doc:
-            return User(user_doc)
+        try:
+            user_doc = users.find_one({"_id": ObjectId(user_id)})
+            if user_doc:
+                return User(user_doc)
+        except Exception:
+            pass
         return None
 
     @staticmethod
@@ -90,7 +108,7 @@ def login():
     return render_template("login.html", error=error)
 
 
-@auth_bp.route("/logout", methods=["POST"])
+@auth_bp.route("/logout", methods=["POST", "GET"])
 @login_required
 def logout():
     logout_user()

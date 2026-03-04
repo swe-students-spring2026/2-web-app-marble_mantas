@@ -74,11 +74,7 @@ Make sure your `.env` file contains the correct configuration values.
 ### 4. Start MongoDB with Docker
 
 ```bash
-docker run --name mongodb_pantrypal \
-  -p 27017:27017 \
-  -e MONGO_INITDB_ROOT_USERNAME=admin \
-  -e MONGO_INITDB_ROOT_PASSWORD=secret \
-  -d mongo:latest
+docker run -d -p 27017:27017 --name pantrypal-mongo mongo
 ```
 To verify the container is running:
 
