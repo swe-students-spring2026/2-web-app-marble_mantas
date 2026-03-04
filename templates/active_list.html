@@ -8,181 +8,132 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/active_list.css') }}">
 </head>
 <body>
+    {% set selected_list = active_list %}
+    {% set selected_name = selected_list.name if selected_list else None %}
+    {% set active_name = request.args.get('active') or selected_name %}
+
     <main class="page">
         <header class="header">
-            <a class="back-link" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Back">←</a>
-            <h1 class="title" id="activeListTitle">Active List Name</h1>
+            <a
+                class="back-link"
+                href="{{ url_for('auth_bp.home', active=active_name) if active_name else url_for('auth_bp.home') }}"
+                aria-label="Back"
+            >←</a>
+            <h1 class="title" id="activeListTitle">{{ selected_name or "Active List Name" }}</h1>
         </header>
 
-        <section class="list-frame" id="activeListFrame" aria-label="List categories"></section>
+        <section class="list-frame" id="activeListFrame" aria-label="List categories">
+            {% if selected_list and selected_list.categories %}
+                {% for category in selected_list.categories %}
+                    <details class="category-group">
+                        <summary class="category-toggle">{{ category.name }}</summary>
+                        <div class="category-items">
+                            {% if category['items'] %}
+                                {% for item in category['items'] %}
+                                    <div class="item-row" data-item-id="{{ item.id }}">
+                                        <span class="item-name">{{ item.name }}</span>
+                                        <span class="item-qty">{{ item.quantity }}</span>
+                                        <button
+                                            class="item-check"
+                                            type="button"
+                                            aria-label="Toggle {{ item.name }} complete"
+                                            aria-pressed="false"
+                                            data-item-id="{{ item.id }}"
+                                            data-item-name="{{ item.name }}"
+                                            data-item-quantity="{{ item.quantity }}"
+                                            data-item-category="{{ category.name }}"
+                                            data-list-name="{{ selected_name }}"
+                                            data-item-status="{{ item.status }}"
+                                        ></button>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-row">No items yet</div>
+                            {% endif %}
+                        </div>
+                    </details>
+                {% endfor %}
+            {% else %}
+                <div class="empty-row"></div>
+            {% endif %}
+        </section>
 
         <nav class="bottom-nav" aria-label="Bottom navigation">
-            <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
+            <a
+                class="icon-button"
+                href="{{ url_for('auth_bp.home', active=active_name) if active_name else url_for('auth_bp.home') }}"
+                aria-label="Home"
+            >
                 <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
             </a>
-            <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
+            <a
+                class="icon-button"
+                href="{{ url_for('items_bp.create_item_form', active=active_name) if active_name else url_for('items_bp.create_item_form') }}"
+                aria-label="Add"
+            >
                 <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
             </a>
-            <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
+            <a
+                class="icon-button"
+                href="{{ url_for('auth_bp.profile', active=active_name) if active_name else url_for('auth_bp.profile') }}"
+                aria-label="Profile"
+            >
                 <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
             </a>
         </nav>
     </main>
+
+    <script id="activeListData" type="application/json">{{ selected_list|tojson }}</script>
     <script>
-        const LISTS_KEY = "pantrypal_lists_v1";
-        const ACTIVE_KEY = "pantrypal_active_list_id_v1";
-        const params = new URLSearchParams(window.location.search);
-        const demoMode = {{ "true" if demo_mode else "false" }};
-        const explicitListId = params.get("list");
+        const updateItemUrlTemplate = "{{ url_for('items_bp.update_item', item_id='ITEM_ID_PLACEHOLDER') }}";
 
-        const titleEl = document.getElementById("activeListTitle");
-        const frameEl = document.getElementById("activeListFrame");
-
-        function makeDefaultLists() {
-            const baseItems = [
-                { id: "seed-item-1", name: "Item 1", quantity: "quantity" },
-                { id: "seed-item-2", name: "Item 2", quantity: "quantity" },
-                { id: "seed-item-3", name: "Item 3", quantity: "quantity" },
-                { id: "seed-item-4", name: "Item 4", quantity: "quantity" },
-            ];
-
-            return [1, 2, 3, 4, 5].map((index) => ({
-                id: `seed-list-${index}`,
-                name: `List ${index}`,
-                categories: [
-                    {
-                        id: `seed-list-${index}-cat-1`,
-                        name: "Category 1",
-                        items: index === 1 ? baseItems.map((item) => ({ ...item })) : [],
-                    },
-                    {
-                        id: `seed-list-${index}-cat-2`,
-                        name: "Category 2",
-                        items: [],
-                    },
-                    {
-                        id: `seed-list-${index}-cat-3`,
-                        name: "Category 3",
-                        items: [],
-                    },
-                ],
-            }));
+        function itemUpdateUrl(itemId) {
+            return updateItemUrlTemplate.replace("ITEM_ID_PLACEHOLDER", encodeURIComponent(itemId));
         }
 
-        function readLists() {
-            try {
-                const parsed = JSON.parse(localStorage.getItem(LISTS_KEY) || "[]");
-                return Array.isArray(parsed) ? parsed : [];
-            } catch (error) {
-                return [];
-            }
-        }
-
-        function writeLists(lists) {
-            localStorage.setItem(LISTS_KEY, JSON.stringify(lists));
-        }
-
-        function ensureLists() {
-            let lists = readLists();
-            if (lists.length === 0) {
-                lists = makeDefaultLists();
-                writeLists(lists);
-            }
-            return lists;
-        }
-
-        function renderList(listData) {
-            frameEl.innerHTML = "";
-            const categories = Array.isArray(listData.categories) ? listData.categories : [];
-
-            if (categories.length === 0) {
-                const placeholder = document.createElement("div");
-                placeholder.className = "empty-row";
-                frameEl.appendChild(placeholder);
-                return;
-            }
-
-            categories.forEach((category, categoryIndex) => {
-                const details = document.createElement("details");
-                details.className = "category-group";
-                if (categoryIndex === 0) {
-                    details.open = true;
-                }
-
-                const summary = document.createElement("summary");
-                summary.className = "category-toggle";
-                summary.textContent = category.name;
-                details.appendChild(summary);
-
-                const itemsWrap = document.createElement("div");
-                itemsWrap.className = "category-items";
-
-                const items = Array.isArray(category.items) ? category.items : [];
-                if (items.length === 0) {
-                    const empty = document.createElement("div");
-                    empty.className = "empty-row";
-                    empty.textContent = "No items yet";
-                    itemsWrap.appendChild(empty);
-                } else {
-                    items.forEach((item) => {
-                        const row = document.createElement("div");
-                        row.className = "item-row";
-
-                        const name = document.createElement("span");
-                        name.className = "item-name";
-                        name.textContent = item.name || "Item";
-
-                        const qty = document.createElement("span");
-                        qty.className = "item-qty";
-                        qty.textContent = item.quantity || "quantity";
-
-                        const check = document.createElement("button");
-                        check.className = "item-check";
-                        check.type = "button";
-                        check.setAttribute("aria-label", `Toggle ${item.name || "item"} complete`);
-                        check.setAttribute("aria-pressed", "false");
-                        check.addEventListener("click", () => {
-                            const nextChecked = !check.classList.contains("checked");
-                            check.classList.toggle("checked", nextChecked);
-                            check.setAttribute("aria-pressed", String(nextChecked));
-                            check.textContent = nextChecked ? "x" : "";
-                        });
-
-                        row.appendChild(name);
-                        row.appendChild(qty);
-                        row.appendChild(check);
-                        itemsWrap.appendChild(row);
-                    });
-                }
-
-                details.appendChild(itemsWrap);
-                frameEl.appendChild(details);
+        async function updateItemStatus(checkButton, checked) {
+            const itemId = checkButton.dataset.itemId;
+            const body = new URLSearchParams({
+                list: checkButton.dataset.listName || "",
+                category: checkButton.dataset.itemCategory || "",
+                name: checkButton.dataset.itemName || "",
+                quantity: checkButton.dataset.itemQuantity || "1",
+                status: checked ? "pantry" : "to_buy",
             });
-        }
 
-        const lists = ensureLists();
-        let activeId = localStorage.getItem(ACTIVE_KEY);
-        if (!activeId || !lists.some((list) => list.id === activeId)) {
-            activeId = lists[0]?.id || null;
-            if (activeId) {
-                localStorage.setItem(ACTIVE_KEY, activeId);
+            const response = await fetch(itemUpdateUrl(itemId), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: body.toString(),
+                credentials: "same-origin",
+                redirect: "follow",
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to update ${itemId}`);
             }
         }
 
-        let selectedList = lists.find((list) => list.id === explicitListId);
-        if (!selectedList) {
-            selectedList = lists.find((list) => list.id === activeId) || lists[0];
-        }
+        document.querySelectorAll(".item-check").forEach((checkButton) => {
+            checkButton.addEventListener("click", async () => {
+                const nextChecked = !checkButton.classList.contains("checked");
 
-        if (!selectedList) {
-            selectedList = {
-                name: "Active List Name",
-                categories: [],
-            };
-        }
+                checkButton.classList.toggle("checked", nextChecked);
+                checkButton.setAttribute("aria-pressed", String(nextChecked));
+                checkButton.textContent = nextChecked ? "x" : "";
 
-        titleEl.textContent = selectedList.name || "Active List Name";
-        renderList(selectedList);
+                try {
+                    await updateItemStatus(checkButton, nextChecked);
+                } catch (error) {
+                    checkButton.classList.toggle("checked", !nextChecked);
+                    checkButton.setAttribute("aria-pressed", String(!nextChecked));
+                    checkButton.textContent = !nextChecked ? "x" : "";
+                    alert("Could not save checkbox state to MongoDB.");
+                }
+            });
+        });
     </script>
 </body>
 </html>

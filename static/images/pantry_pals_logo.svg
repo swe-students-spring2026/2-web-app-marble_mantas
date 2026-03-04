@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 720" role="img" aria-labelledby="title desc">
+  <title id="title">Pantry Pals Logo</title>
+  <desc id="desc">Shopping basket icon with Pantry Pals text</desc>
+  <rect width="720" height="720" fill="#ffffff"/>
+  <g fill="none" stroke="#2c3650" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M188 214h383"/>
+    <path d="M170 160h54c24 0 30 24 33 34l31 160c8 35 24 50 54 50h167c29 0 40-14 50-50l37-140"/>
+    <path d="M329 168l55-98"/>
+    <path d="M500 164l-55-94"/>
+    <path d="M246 274h185"/>
+    <path d="M258 326h162"/>
+  </g>
+  <text x="360" y="590" text-anchor="middle" fill="#444" font-family="Arial, sans-serif" font-size="106" font-weight="400">
+    Pantry Pals
+  </text>
+</svg>

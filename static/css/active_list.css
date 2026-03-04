@@ -1,7 +1,7 @@
 .page {
     display: flex;
     flex-direction: column;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+    padding-bottom: calc(90px + env(safe-area-inset-bottom) + 20px);
 }
 
 .header {
@@ -61,7 +61,7 @@
     font-weight: 400;
     text-align: center;
     cursor: pointer;
-    background: #e5e5e5;
+    background: #fff;
 }
 
 .category-toggle::-webkit-details-marker {
@@ -73,11 +73,11 @@
 }
 
 details[open] > .category-toggle {
-    background: #ededed;
+    background: #fff;
 }
 
 .category-items {
-    background: #e5e5e5;
+    background: #fff;
 }
 
 .item-row {
@@ -120,7 +120,7 @@ details[open] > .category-toggle {
 }
 
 .item-check.checked {
-    background: #f1f1f1;
+    background: #fff;
 }
 
 .item-check:focus-visible {

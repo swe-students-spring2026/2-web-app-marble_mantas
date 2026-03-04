@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from datetime import datetime
 from db import items
-from flask import Blueprint, request, render_template, redirect, url_for
+from flask import Blueprint, request, render_template, redirect, url_for, jsonify
 from bson import ObjectId
 from flask_login import login_required, current_user
 
@@ -121,7 +121,16 @@ def list_items():
 @items_bp.get("/pantry")
 @login_required
 def pantry_list():
-    pantry_items = [item for item in get_user_items() if item["status"] == "pantry"]
+    search_term = (request.args.get("q") or "").strip()
+
+    if search_term:
+        pantry_items = item_search(search_term, status="pantry")
+    else:
+        pantry_items = [item for item in get_user_items() if item["status"] == "pantry"]
+
+    if request.args.get("format") == "json":
+        return jsonify({"items": pantry_items})
+
     return render_template("pantry_list.html", items=pantry_items)
 
 @items_bp.get("/shopping")
