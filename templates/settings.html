@@ -3,15 +3,111 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Settings</title>
+    <title>Profile Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
 </head>
 <body>
-    <main>
-        <h1>Settings</h1>
-        <p>Signed in as {{ username }}</p>
-        <form method="post" action="{{ url_for('auth_bp.logout') }}">
-            <button type="submit">Log out</button>
+    {% set active_name = active_name or request.args.get('active') %}
+
+    <main class="page">
+        <header class="settings-header">
+            <a
+                class="back-link"
+                href="{{ url_for('auth_bp.profile', active=active_name) if active_name else url_for('auth_bp.profile') }}"
+                aria-label="Back"
+            >&#8592;</a>
+            <h1 class="settings-title">Profile Settings</h1>
+        </header>
+
+        <form
+            class="settings-form"
+            method="post"
+            action="{{ url_for('auth_bp.settings', active=active_name) if active_name else url_for('auth_bp.settings') }}"
+            enctype="multipart/form-data"
+        >
+            <div class="field-row">
+                <label for="usernameInput">Username:</label>
+                <input id="usernameInput" name="username" type="text" value="{{ username or '' }}" />
+            </div>
+
+            <div class="field-row">
+                <label for="passwordInput">Password:</label>
+                <input id="passwordInput" name="password" type="password" />
+            </div>
+
+            <div class="field-row">
+                <label for="newPasswordInput">New Password:</label>
+                <input id="newPasswordInput" name="new_password" type="password" />
+            </div>
+
+            <div class="field-row">
+                <label for="confirmPasswordInput">Confirm:</label>
+                <input id="confirmPasswordInput" name="confirm_password" type="password" />
+            </div>
+
+            <div class="photo-row">
+                <button class="photo-link" id="changePhotoBtn" type="button">Change Profile Picture</button>
+                <span class="photo-status" id="photoAddedText">{% if photo_added %}added{% endif %}</span>
+                <input id="profilePhotoInput" name="profile_photo" type="file" accept="image/*" class="hidden" />
+            </div>
+
+            {% if error %}
+                <p class="form-message error">{{ error }}</p>
+            {% elif success %}
+                <p class="form-message success">{{ success }}</p>
+            {% else %}
+                <p class="form-message" id="formMessage"></p>
+            {% endif %}
+
+            <div class="save-row">
+                <button class="btn-primary btn-settings-save" type="submit">Save Changes</button>
+            </div>
         </form>
+
+        <nav class="bottom-nav" aria-label="Bottom navigation">
+            <a
+                class="icon-button"
+                href="{{ url_for('auth_bp.home', active=active_name) if active_name else url_for('auth_bp.home') }}"
+                aria-label="Home"
+            >
+                <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
+            </a>
+            <a
+                class="icon-button"
+                href="{{ url_for('items_bp.create_item_form', active=active_name) if active_name else url_for('items_bp.create_item_form') }}"
+                aria-label="Add"
+            >
+                <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
+            </a>
+            <a
+                class="icon-button"
+                href="{{ url_for('auth_bp.profile', active=active_name) if active_name else url_for('auth_bp.profile') }}"
+                aria-label="Profile"
+            >
+                <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
+            </a>
+        </nav>
     </main>
+
+    <script>
+        const changePhotoBtn = document.getElementById("changePhotoBtn");
+        const profilePhotoInput = document.getElementById("profilePhotoInput");
+        const photoAddedText = document.getElementById("photoAddedText");
+        const formMessage = document.getElementById("formMessage");
+
+        changePhotoBtn.addEventListener("click", () => {
+            profilePhotoInput.click();
+        });
+
+        profilePhotoInput.addEventListener("change", () => {
+            if (profilePhotoInput.files && profilePhotoInput.files.length > 0) {
+                photoAddedText.textContent = "added";
+                if (formMessage) {
+                    formMessage.textContent = "";
+                }
+            }
+        });
+    </script>
 </body>
 </html>

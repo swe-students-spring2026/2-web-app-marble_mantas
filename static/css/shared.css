@@ -1,5 +1,5 @@
 :root {
-    --bg-color: #e5e5e5;
+    --bg-color: #fff;
     --text-color: #111;
     --font-family: Arial, sans-serif;
     --max-width: 393px;
@@ -34,7 +34,8 @@ body {
     flex-direction: column;
     /* Padding bottom handles fixed nav */
     padding: calc(env(safe-area-inset-top) + 20px) 16px calc(90px + env(safe-area-inset-bottom) + 20px);
-    overflow: hidden; /* Prevent body scroll if page content scrolls */
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Common Typography */
@@ -92,7 +93,7 @@ button {
     justify-content: space-around;
     align-items: center;
     padding: 0 18px;
-    background: #efefef; /* Standardize background */
+    background: #fff;
     border-top: 1px solid #777;
     position: fixed;
     bottom: 0;

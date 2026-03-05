@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/items_form.css') }}">
 </head>
 <body>
+    {% set active_name = request.args.get('active') %}
+
     <main class="page">
         <section class="view" id="editorView">
             <div class="editor-form">
@@ -50,13 +52,25 @@
             </div>
 
             <nav class="bottom-nav" aria-label="Bottom navigation">
-                <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
+                <a
+                    class="icon-button"
+                    href="{{ url_for('auth_bp.home', active=active_name) if active_name else url_for('auth_bp.home') }}"
+                    aria-label="Home"
+                >
                     <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
                 </a>
-                <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
+                <a
+                    class="icon-button"
+                    href="{{ url_for('items_bp.create_item_form', active=active_name) if active_name else url_for('items_bp.create_item_form') }}"
+                    aria-label="Add"
+                >
                     <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
                 </a>
-                <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
+                <a
+                    class="icon-button"
+                    href="{{ url_for('auth_bp.profile', active=active_name) if active_name else url_for('auth_bp.profile') }}"
+                    aria-label="Profile"
+                >
                     <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
                 </a>
             </nav>
@@ -71,13 +85,25 @@
             <section class="preview-frame" id="previewFrame" aria-label="Preview list"></section>
 
             <nav class="bottom-nav" aria-label="Bottom navigation">
-                <a class="icon-button" href="{{ url_for('auth_bp.home', demo=1) if demo_mode else url_for('auth_bp.home') }}" aria-label="Home">
+                <a
+                    class="icon-button"
+                    href="{{ url_for('auth_bp.home', active=active_name) if active_name else url_for('auth_bp.home') }}"
+                    aria-label="Home"
+                >
                     <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
                 </a>
-                <a class="icon-button" href="{{ url_for('items_bp.create_item_form', demo=1) if demo_mode else url_for('items_bp.create_item_form') }}" aria-label="Add">
+                <a
+                    class="icon-button"
+                    href="{{ url_for('items_bp.create_item_form', active=active_name) if active_name else url_for('items_bp.create_item_form') }}"
+                    aria-label="Add"
+                >
                     <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
                 </a>
-                <a class="icon-button" href="{{ url_for('auth_bp.profile', demo=1) if demo_mode else url_for('auth_bp.profile') }}" aria-label="Profile">
+                <a
+                    class="icon-button"
+                    href="{{ url_for('auth_bp.profile', active=active_name) if active_name else url_for('auth_bp.profile') }}"
+                    aria-label="Profile"
+                >
                     <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
                 </a>
             </nav>
@@ -85,16 +111,14 @@
     </main>
 
     <script>
+        const createItemUrl = "{{ url_for('items_bp.create_item') }}";
+        const profileBaseUrl = "{{ url_for('auth_bp.profile') }}";
+
         const state = {
             categories: [],
             selectedCategoryId: null,
             nextCategoryId: 1,
         };
-        const params = new URLSearchParams(window.location.search);
-        const demoMode = params.get("demo") === "1";
-        const previewMode = params.get("view") === "preview";
-        const LISTS_KEY = "pantrypal_lists_v1";
-        const ACTIVE_KEY = "pantrypal_active_list_id_v1";
 
         const categoryWrap = document.getElementById("categoryWrap");
         const statusMessage = document.getElementById("statusMessage");
@@ -106,66 +130,15 @@
         const previewFrame = document.getElementById("previewFrame");
         const editorView = document.getElementById("editorView");
         const previewView = document.getElementById("previewView");
+        const createListBtn = document.getElementById("createListBtn");
 
         function setMessage(message) {
             statusMessage.textContent = message;
         }
 
-        function readStoredLists() {
-            try {
-                const parsed = JSON.parse(localStorage.getItem(LISTS_KEY) || "[]");
-                return Array.isArray(parsed) ? parsed : [];
-            } catch (error) {
-                return [];
-            }
-        }
-
-        function writeStoredLists(lists) {
-            localStorage.setItem(LISTS_KEY, JSON.stringify(lists));
-        }
-
-        function createListPayload() {
-            const listId = `list-${Date.now()}`;
-            return {
-                id: listId,
-                name: listNameInput.value.trim() || "List Name",
-                categories: state.categories.map((category, categoryIndex) => ({
-                    id: `cat-${listId}-${categoryIndex}`,
-                    name: category.name,
-                    items: (Array.isArray(category.items) ? category.items : []).map((item, itemIndex) => ({
-                        id: `item-${listId}-${categoryIndex}-${itemIndex}`,
-                        name: item.name,
-                        quantity: item.quantity,
-                    })),
-                })),
-            };
-        }
-
-        function createList() {
-            if (state.categories.length === 0) {
-                setMessage("Add at least one category before creating.");
-                return;
-            }
-
-            const newList = createListPayload();
-            const lists = readStoredLists();
-            lists.push(newList);
-            writeStoredLists(lists);
-
-            if (!localStorage.getItem(ACTIVE_KEY)) {
-                localStorage.setItem(ACTIVE_KEY, newList.id);
-            }
-
-            const profileUrl = new URL("{{ url_for('auth_bp.profile') }}", window.location.origin);
-            if (demoMode) {
-                profileUrl.searchParams.set("demo", "1");
-            }
-            profileUrl.searchParams.set("list", newList.id);
-            window.location.href = `${profileUrl.pathname}${profileUrl.search}`;
-        }
-
         function renderCategoryChips() {
             categoryWrap.innerHTML = "";
+
             state.categories.forEach((category) => {
                 const chip = document.createElement("div");
                 chip.className = "category-chip";
@@ -178,11 +151,7 @@
                 chip.setAttribute("aria-pressed", String(state.selectedCategoryId === category.id));
 
                 chip.addEventListener("click", () => {
-                    if (state.selectedCategoryId === category.id) {
-                        state.selectedCategoryId = null;
-                    } else {
-                        state.selectedCategoryId = category.id;
-                    }
+                    state.selectedCategoryId = state.selectedCategoryId === category.id ? null : category.id;
                     renderCategoryChips();
                 });
 
@@ -203,7 +172,7 @@
                 removeButton.setAttribute("aria-label", `Delete ${category.name}`);
                 removeButton.addEventListener("click", (event) => {
                     event.stopPropagation();
-                    state.categories = state.categories.filter((item) => item.id !== category.id);
+                    state.categories = state.categories.filter((entry) => entry.id !== category.id);
                     if (state.selectedCategoryId === category.id) {
                         state.selectedCategoryId = null;
                     }
@@ -217,29 +186,21 @@
             });
         }
 
-        function getPreviewCategories() {
-            if (state.categories.length > 0) {
-                return state.categories;
-            }
-            return [
-                { id: 1, name: "Category 1", items: [] },
-                { id: 2, name: "Category 2", items: [] },
-                { id: 3, name: "Category 3", items: [] },
-            ];
-        }
-
         function renderPreview() {
             const listName = listNameInput.value.trim();
             previewTitle.textContent = listName || "Preview List Name";
             previewFrame.innerHTML = "";
 
-            const previewCategories = getPreviewCategories();
-            previewCategories.forEach((category, index) => {
+            if (state.categories.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "preview-empty-row";
+                previewFrame.appendChild(empty);
+                return;
+            }
+
+            state.categories.forEach((category) => {
                 const details = document.createElement("details");
                 details.className = "preview-category";
-                if (index === 0) {
-                    details.open = true;
-                }
 
                 const summary = document.createElement("summary");
                 summary.className = "preview-category-toggle";
@@ -302,9 +263,15 @@
             }
 
             const itemName = itemNameInput.value.trim();
-            const itemQuantity = itemQtyInput.value.trim();
-            if (!itemName || !itemQuantity) {
-                setMessage("Enter both item name and quantity.");
+            const quantityText = itemQtyInput.value.trim();
+            const parsedQuantity = Number.parseInt(quantityText, 10);
+
+            if (!itemName) {
+                setMessage("Enter an item name.");
+                return;
+            }
+            if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
+                setMessage("Quantity must be a whole number of at least 1.");
                 return;
             }
 
@@ -316,13 +283,68 @@
 
             selectedCategory.items.push({
                 name: itemName,
-                quantity: itemQuantity,
+                quantity: String(parsedQuantity),
             });
 
             itemNameInput.value = "";
             itemQtyInput.value = "";
             setMessage("");
             renderPreview();
+        }
+
+        async function createList() {
+            const listName = listNameInput.value.trim();
+            if (!listName) {
+                setMessage("Enter a list name.");
+                return;
+            }
+
+            const payloads = [];
+            state.categories.forEach((category) => {
+                category.items.forEach((item) => {
+                    payloads.push({
+                        list: listName,
+                        category: category.name,
+                        name: item.name,
+                        quantity: item.quantity,
+                        status: "to_buy",
+                    });
+                });
+            });
+
+            if (payloads.length === 0) {
+                setMessage("Add at least one item before creating.");
+                return;
+            }
+
+            createListBtn.disabled = true;
+            setMessage("Saving list...");
+
+            try {
+                for (const payload of payloads) {
+                    const body = new URLSearchParams(payload);
+                    const response = await fetch(createItemUrl, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: body.toString(),
+                        redirect: "follow",
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed request: ${response.status}`);
+                    }
+                }
+
+                const profileUrl = new URL(profileBaseUrl, window.location.origin);
+                profileUrl.searchParams.set("list", listName);
+                profileUrl.searchParams.set("active", listName);
+                window.location.href = `${profileUrl.pathname}${profileUrl.search}`;
+            } catch (error) {
+                setMessage("Could not save list to MongoDB. Check backend/Mongo connection and try again.");
+                createListBtn.disabled = false;
+            }
         }
 
         function openPreview() {
@@ -334,34 +356,6 @@
         function closePreview() {
             previewView.classList.add("hidden");
             editorView.classList.remove("hidden");
-        }
-
-        function loadDemoData() {
-            listNameInput.value = "Preview List Name";
-            state.categories = [
-                {
-                    id: 1,
-                    name: "Category 1",
-                    items: [
-                        { name: "Item 1", quantity: "quantity" },
-                        { name: "Item 2", quantity: "quantity" },
-                        { name: "Item 3", quantity: "quantity" },
-                        { name: "Item 4", quantity: "quantity" },
-                    ],
-                },
-                {
-                    id: 2,
-                    name: "Category 2",
-                    items: [],
-                },
-                {
-                    id: 3,
-                    name: "Category 3",
-                    items: [],
-                },
-            ];
-            state.selectedCategoryId = null;
-            state.nextCategoryId = 4;
         }
 
         document.getElementById("addCategoryBtn").addEventListener("click", addCategory);
@@ -377,16 +371,8 @@
             }
         });
 
-        if (demoMode) {
-            loadDemoData();
-        }
-
         renderCategoryChips();
         renderPreview();
-
-        if (previewMode) {
-            openPreview();
-        }
     </script>
 </body>
 </html>
