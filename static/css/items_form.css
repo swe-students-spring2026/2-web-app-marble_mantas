@@ -1,10 +1,4 @@
-body {
-    overflow: hidden;
-}
 
-.page {
-    height: 100dvh;
-}
 
 .view {
     height: 100%;
@@ -49,11 +43,6 @@ body {
     grid-template-columns: 106px minmax(0, 1fr) auto;
 }
 
-.btn-form-action {
-    min-width: 80px;
-    height: 40px;
-    font-size: 0.95rem;
-}
 
 .category-add-btn {
     border: none;
@@ -157,26 +146,7 @@ body {
     gap: 14px;
 }
 
-.back-link {
-    color: #111;
-    text-decoration: none;
-    font-size: 1.9rem;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 6px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    padding: 0;
-}
 
-.back-link:hover {
-    background: rgba(0, 0, 0, 0.07);
-}
 
 .preview-title {
     margin: 0;
@@ -269,3 +239,36 @@ body {
         font-size: 1.05rem;
     }
 }
+
+.form-select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: transparent;
+    font-size: 0.95rem;
+    height: 38px;
+}
+
+.create-row-flex {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+    padding-right: 0;
+}
+
+.form-flex-child {
+    flex: 1;
+}
+
+.btn-cancel {
+    text-decoration: none;
+    text-align: center;
+    background-color: #ccc;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+

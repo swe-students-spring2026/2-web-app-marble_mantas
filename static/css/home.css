@@ -1,15 +1,4 @@
-body {
-    display: flex;
-    flex-direction: column;
-    color: #000;
-}
 
-.page {
-    display: flex;
-    flex-direction: column;
-    padding: calc(env(safe-area-inset-top) + 34px) 16px calc(90px + env(safe-area-inset-bottom) + 20px);
-    overflow-y: auto;
-}
 
 .title {
     margin: 0;
@@ -32,8 +21,20 @@ body {
     display: block;
 }
 
-.active-list {
+.active-list-container {
     margin: 110px auto 0;
+    text-align: center;
+}
+
+.active-list-label {
+    font-size: 3rem;
+    font-weight: 400;
+    margin-bottom: 10px;
+    color: #000;
+}
+
+.active-list {
+    margin: 0 auto;
     font-size: 3rem;
     font-weight: 400;
     text-decoration: underline;
@@ -63,7 +64,7 @@ body {
         margin-top: 64px;
     }
 
-    .active-list {
+    .active-list-container {
         margin-top: 80px;
     }
 }

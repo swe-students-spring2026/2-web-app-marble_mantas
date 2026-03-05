@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create List</title>
+    <title>{% if item and item.get('id') %}Edit Item{% else %}Add Item{% endif %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/items_form.css') }}">
 </head>
@@ -12,77 +12,66 @@
 
     <main class="page">
         <section class="view" id="editorView">
-            <div class="editor-form">
+            <form class="editor-form" action="{{ url_for('items_bp.update_item', item_id=item.id) if item and item.get('id') else url_for('items_bp.create_item') }}" method="POST">
+                {% if error %}
+                    <p class="status-message">{{ error }}</p>
+                {% endif %}
+
                 <div class="field-row">
                     <label for="listNameInput">List Name:</label>
-                    <input id="listNameInput" type="text" />
+                    <input id="listNameInput" name="list" type="text" value="{{ item.get('list', '') if item else request.args.get('list', 'My List') }}" list="existingLists" required />
+                    <datalist id="existingLists">
+                        {% for l in existing_lists %}
+                            <option value="{{ l }}"></option>
+                        {% endfor %}
+                    </datalist>
                 </div>
 
-                <div class="field-row category-add-row">
-                    <label for="categoryInput">Categories:</label>
-                    <input id="categoryInput" type="text" />
-                    <button class="category-add-btn" id="addCategoryBtn" type="button" aria-label="Add category">+</button>
+                <div class="field-row">
+                    <label for="categoryInput">Category:</label>
+                    <input id="categoryInput" name="category" type="text" value="{{ item.get('category', '') if item else 'Uncategorized' }}" list="existingCategories" />
+                    <datalist id="existingCategories">
+                        {% for c in existing_categories %}
+                            <option value="{{ c }}"></option>
+                        {% endfor %}
+                    </datalist>
                 </div>
-
-                <div class="category-wrap" id="categoryWrap" aria-live="polite"></div>
-
-                <div class="section-title">Add Item:</div>
 
                 <div class="field-row">
                     <label for="itemNameInput">Name:</label>
-                    <input id="itemNameInput" type="text" />
+                    <input id="itemNameInput" name="name" type="text" value="{{ item.get('name', '') if item else '' }}" required />
                 </div>
 
                 <div class="field-row">
                     <label for="itemQtyInput">Quantity:</label>
-                    <input id="itemQtyInput" type="text" />
+                    <input id="itemQtyInput" name="quantity" type="number" min="1" value="{{ item.get('quantity', 1) if item else 1 }}" required />
                 </div>
 
-                <div class="add-item-row">
-                    <button class="btn-primary btn-form-action" id="addItemBtn" type="button">Add</button>
+                <div class="field-row">
+                    <label for="itemStatusInput">Status:</label>
+                    <select id="itemStatusInput" name="status" class="form-select">
+                        <option value="to_buy" {% if item and item.get('status') == 'to_buy' %}selected{% endif %}>To Buy</option>
+                        <option value="pantry" {% if item and item.get('status') == 'pantry' %}selected{% endif %}>Completed</option>
+                    </select>
                 </div>
+                
+                <input type="hidden" name="origin" value="{{ request.args.get('origin', '') }}">
 
-                <p class="status-message" id="statusMessage"></p>
-
-                <button class="preview-link" id="openPreviewBtn" type="button">preview_list</button>
-
-                <div class="create-row">
-                    <button class="btn-primary btn-form-action" id="createListBtn" type="button">Create</button>
+                <div class="create-row-flex">
+                    <button class="btn-primary  form-flex-child" id="createListBtn" type="submit">
+                        {% if item and item.get('id') %}Update{% else %}Create{% endif %}
+                    </button>
+                    {% if item and item.get('id') %}
+                        <a href="{{ request.referrer or url_for('items_bp.pantry_list') }}" class="btn-primary  btn-cancel form-flex-child">Cancel</a>
+                    {% endif %}
                 </div>
-            </div>
-
-            <nav class="bottom-nav" aria-label="Bottom navigation">
-                <a
-                    class="icon-button"
-                    href="{{ url_for('auth_bp.home', active=active_name) if active_name else url_for('auth_bp.home') }}"
-                    aria-label="Home"
-                >
-                    <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
-                </a>
-                <a
-                    class="icon-button"
-                    href="{{ url_for('items_bp.create_item_form', active=active_name) if active_name else url_for('items_bp.create_item_form') }}"
-                    aria-label="Add"
-                >
-                    <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
-                </a>
-                <a
-                    class="icon-button"
-                    href="{{ url_for('auth_bp.profile', active=active_name) if active_name else url_for('auth_bp.profile') }}"
-                    aria-label="Profile"
-                >
-                    <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
-                </a>
-            </nav>
-        </section>
-
-        <section class="view hidden" id="previewView">
-            <header class="preview-header">
-                <button class="back-link" id="closePreviewBtn" type="button" aria-label="Back">&#8592;</button>
-                <h1 class="preview-title" id="previewTitle">Preview List Name</h1>
-            </header>
-
-            <section class="preview-frame" id="previewFrame" aria-label="Preview list"></section>
+            </form>
+            
+            {% if item and item.get('id') %}
+            <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST" class="p-0-2 mb-20">
+                <button type="submit" class="btn-primary  btn-danger" class="w-100" onsubmit="return confirm('Delete this item?');">Delete Item</button>
+            </form>
+            {% endif %}
 
             <nav class="bottom-nav" aria-label="Bottom navigation">
                 <a
@@ -109,270 +98,5 @@
             </nav>
         </section>
     </main>
-
-    <script>
-        const createItemUrl = "{{ url_for('items_bp.create_item') }}";
-        const profileBaseUrl = "{{ url_for('auth_bp.profile') }}";
-
-        const state = {
-            categories: [],
-            selectedCategoryId: null,
-            nextCategoryId: 1,
-        };
-
-        const categoryWrap = document.getElementById("categoryWrap");
-        const statusMessage = document.getElementById("statusMessage");
-        const categoryInput = document.getElementById("categoryInput");
-        const listNameInput = document.getElementById("listNameInput");
-        const itemNameInput = document.getElementById("itemNameInput");
-        const itemQtyInput = document.getElementById("itemQtyInput");
-        const previewTitle = document.getElementById("previewTitle");
-        const previewFrame = document.getElementById("previewFrame");
-        const editorView = document.getElementById("editorView");
-        const previewView = document.getElementById("previewView");
-        const createListBtn = document.getElementById("createListBtn");
-
-        function setMessage(message) {
-            statusMessage.textContent = message;
-        }
-
-        function renderCategoryChips() {
-            categoryWrap.innerHTML = "";
-
-            state.categories.forEach((category) => {
-                const chip = document.createElement("div");
-                chip.className = "category-chip";
-                if (state.selectedCategoryId === category.id) {
-                    chip.classList.add("selected");
-                }
-
-                chip.setAttribute("role", "button");
-                chip.setAttribute("tabindex", "0");
-                chip.setAttribute("aria-pressed", String(state.selectedCategoryId === category.id));
-
-                chip.addEventListener("click", () => {
-                    state.selectedCategoryId = state.selectedCategoryId === category.id ? null : category.id;
-                    renderCategoryChips();
-                });
-
-                chip.addEventListener("keydown", (event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        chip.click();
-                    }
-                });
-
-                const text = document.createElement("span");
-                text.textContent = category.name;
-
-                const removeButton = document.createElement("button");
-                removeButton.className = "chip-remove";
-                removeButton.type = "button";
-                removeButton.textContent = "x";
-                removeButton.setAttribute("aria-label", `Delete ${category.name}`);
-                removeButton.addEventListener("click", (event) => {
-                    event.stopPropagation();
-                    state.categories = state.categories.filter((entry) => entry.id !== category.id);
-                    if (state.selectedCategoryId === category.id) {
-                        state.selectedCategoryId = null;
-                    }
-                    renderCategoryChips();
-                    renderPreview();
-                });
-
-                chip.appendChild(text);
-                chip.appendChild(removeButton);
-                categoryWrap.appendChild(chip);
-            });
-        }
-
-        function renderPreview() {
-            const listName = listNameInput.value.trim();
-            previewTitle.textContent = listName || "Preview List Name";
-            previewFrame.innerHTML = "";
-
-            if (state.categories.length === 0) {
-                const empty = document.createElement("div");
-                empty.className = "preview-empty-row";
-                previewFrame.appendChild(empty);
-                return;
-            }
-
-            state.categories.forEach((category) => {
-                const details = document.createElement("details");
-                details.className = "preview-category";
-
-                const summary = document.createElement("summary");
-                summary.className = "preview-category-toggle";
-                summary.textContent = category.name;
-
-                const itemsContainer = document.createElement("div");
-                itemsContainer.className = "preview-category-items";
-
-                if (category.items.length === 0) {
-                    const empty = document.createElement("div");
-                    empty.className = "preview-empty-row";
-                    itemsContainer.appendChild(empty);
-                } else {
-                    category.items.forEach((item) => {
-                        const row = document.createElement("div");
-                        row.className = "preview-item-row";
-
-                        const name = document.createElement("span");
-                        name.textContent = item.name;
-
-                        const qty = document.createElement("span");
-                        qty.className = "preview-item-qty";
-                        qty.textContent = item.quantity;
-
-                        row.appendChild(name);
-                        row.appendChild(qty);
-                        itemsContainer.appendChild(row);
-                    });
-                }
-
-                details.appendChild(summary);
-                details.appendChild(itemsContainer);
-                previewFrame.appendChild(details);
-            });
-        }
-
-        function addCategory() {
-            const categoryName = categoryInput.value.trim();
-            if (!categoryName) {
-                setMessage("Enter a category first.");
-                return;
-            }
-
-            state.categories.push({
-                id: state.nextCategoryId,
-                name: categoryName,
-                items: [],
-            });
-            state.nextCategoryId += 1;
-            categoryInput.value = "";
-            setMessage("");
-            renderCategoryChips();
-            renderPreview();
-        }
-
-        function addItem() {
-            if (state.selectedCategoryId === null) {
-                setMessage("Select a category before adding an item.");
-                return;
-            }
-
-            const itemName = itemNameInput.value.trim();
-            const quantityText = itemQtyInput.value.trim();
-            const parsedQuantity = Number.parseInt(quantityText, 10);
-
-            if (!itemName) {
-                setMessage("Enter an item name.");
-                return;
-            }
-            if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
-                setMessage("Quantity must be a whole number of at least 1.");
-                return;
-            }
-
-            const selectedCategory = state.categories.find((category) => category.id === state.selectedCategoryId);
-            if (!selectedCategory) {
-                setMessage("Selected category was not found.");
-                return;
-            }
-
-            selectedCategory.items.push({
-                name: itemName,
-                quantity: String(parsedQuantity),
-            });
-
-            itemNameInput.value = "";
-            itemQtyInput.value = "";
-            setMessage("");
-            renderPreview();
-        }
-
-        async function createList() {
-            const listName = listNameInput.value.trim();
-            if (!listName) {
-                setMessage("Enter a list name.");
-                return;
-            }
-
-            const payloads = [];
-            state.categories.forEach((category) => {
-                category.items.forEach((item) => {
-                    payloads.push({
-                        list: listName,
-                        category: category.name,
-                        name: item.name,
-                        quantity: item.quantity,
-                        status: "to_buy",
-                    });
-                });
-            });
-
-            if (payloads.length === 0) {
-                setMessage("Add at least one item before creating.");
-                return;
-            }
-
-            createListBtn.disabled = true;
-            setMessage("Saving list...");
-
-            try {
-                for (const payload of payloads) {
-                    const body = new URLSearchParams(payload);
-                    const response = await fetch(createItemUrl, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                        },
-                        body: body.toString(),
-                        redirect: "follow",
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Failed request: ${response.status}`);
-                    }
-                }
-
-                const profileUrl = new URL(profileBaseUrl, window.location.origin);
-                profileUrl.searchParams.set("list", listName);
-                profileUrl.searchParams.set("active", listName);
-                window.location.href = `${profileUrl.pathname}${profileUrl.search}`;
-            } catch (error) {
-                setMessage("Could not save list to MongoDB. Check backend/Mongo connection and try again.");
-                createListBtn.disabled = false;
-            }
-        }
-
-        function openPreview() {
-            renderPreview();
-            editorView.classList.add("hidden");
-            previewView.classList.remove("hidden");
-        }
-
-        function closePreview() {
-            previewView.classList.add("hidden");
-            editorView.classList.remove("hidden");
-        }
-
-        document.getElementById("addCategoryBtn").addEventListener("click", addCategory);
-        document.getElementById("addItemBtn").addEventListener("click", addItem);
-        document.getElementById("openPreviewBtn").addEventListener("click", openPreview);
-        document.getElementById("closePreviewBtn").addEventListener("click", closePreview);
-        document.getElementById("createListBtn").addEventListener("click", createList);
-
-        categoryInput.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                addCategory();
-            }
-        });
-
-        renderCategoryChips();
-        renderPreview();
-    </script>
 </body>
 </html>

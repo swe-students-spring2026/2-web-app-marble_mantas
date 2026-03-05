@@ -32,9 +32,7 @@
                             {% if category['items'] %}
                                 {% for item in category['items'] %}
                                     <div class="item-row" data-item-id="{{ item.id }}">
-                                        <span class="item-name">{{ item.name }}</span>
-                                        <span class="item-qty">{{ item.quantity }}</span>
-                                        <form action="{{ url_for('items_bp.update_item', item_id=item.id) }}" method="POST" style="display: inline;">
+                                        <form action="{{ url_for('items_bp.update_item', item_id=item.id) }}" method="POST" class="m-0 d-flex-gap-8 flex-1">
                                             <input type="hidden" name="list" value="{{ selected_name }}">
                                             <input type="hidden" name="category" value="{{ category.name }}">
                                             <input type="hidden" name="name" value="{{ item.name }}">
@@ -47,7 +45,17 @@
                                                 aria-label="{% if item.status == 'pantry' %}Mark {{ item.name }} incomplete{% else %}Complete {{ item.name }}{% endif %}"
                                                 aria-pressed="{% if item.status == 'pantry' %}true{% else %}false{% endif %}"
                                             >{% if item.status == 'pantry' %}x{% endif %}</button>
+                                            <span class="item-name align-center">{{ item.name }}</span>
                                         </form>
+                                        <span class="item-qty mr-8">{{ item.quantity }}</span>
+                                        
+                                        <div class="d-flex-gap-8">
+                                            <a href="{{ url_for('items_bp.edit_item_form', item_id=item.id) }}" class="btn-primary btn-sm btn-auto-width text-none">Edit</a>
+                                            <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST" onsubmit="return confirm('Delete this item?');" class="m-0">
+                                                <input type="hidden" name="origin" value="active_list" />
+                                                <button type="submit" class="btn-primary btn-sm btn-auto-width btn-danger">Delete</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 {% endfor %}
                             {% else %}
@@ -60,6 +68,20 @@
                 <div class="empty-row">List empty or all items completed!</div>
             {% endif %}
         </section>
+
+        {% if selected_name %}
+        <div class="action-row d-flex-gap-8 p-16">
+            <form action="{{ url_for('items_bp.activate_list', list_name=selected_name) }}" method="POST" class="flex-1 m-0">
+                <input type="hidden" name="origin" value="active_list" />
+                <button type="submit" class="btn-primary w-100">Activate</button>
+            </form>
+            <a href="{{ url_for('items_bp.create_item_form', list=selected_name, origin='active_list') }}" class="btn-primary flex-1 center-flex text-none">Add Item</a>
+            <form action="{{ url_for('items_bp.delete_list', list_name=selected_name) }}" method="POST" class="flex-1 m-0" onsubmit="return confirm('Delete list {{ selected_name }} and all its items?');">                                
+                <input type="hidden" name="origin" value="active_list" />
+                <button type="submit" class="btn-primary w-100 btn-danger">Delete</button>                                                        
+            </form>
+        </div>
+        {% endif %}
 
         <nav class="bottom-nav" aria-label="Bottom navigation">
             <a

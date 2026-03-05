@@ -45,9 +45,9 @@
                                     <span class="item-qty pantry-qty">{{ item.quantity }}</span>
                                 </div>
                                 <div class="item-actions">
-                                    <a class="btn-action-sm" href="{{ url_for('items_bp.edit_item_form', item_id=item.id) }}">Edit</a>
+                                    <a class="btn-primary btn-sm btn-auto-width" href="{{ url_for('items_bp.edit_item_form', item_id=item.id) }}">Edit</a>
                                     <form class="delete-pantry-item-form" action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST">
-                                        <button class="btn-action-sm" type="submit">Delete</button>
+                                        <button class="btn-primary btn-sm btn-auto-width" type="submit">Delete</button>
                                     </form>
                                 </div>
                             </div>

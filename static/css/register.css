@@ -1,7 +1,3 @@
-body {
-    display: flex;
-    justify-content: center;
-}
 
 .register-card {
     padding: calc(env(safe-area-inset-top) + 36px) 22px env(safe-area-inset-bottom);

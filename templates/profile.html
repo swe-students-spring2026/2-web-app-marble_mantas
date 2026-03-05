@@ -11,7 +11,7 @@
     {% set active_name = request.args.get('active') %}
 
     <main class="page">
-        <section class="view" id="profileListView">
+        <section class="view {% if request.args.get('list') %}hidden{% endif %}" id="profileListView">
             <div class="profile-top">
                 <a
                     class="gear-btn"
@@ -21,22 +21,45 @@
                 >&#9881;</a>
             </div>
 
-            <button class="avatar-box{% if profile_image %} has-photo{% endif %}" id="avatarButton" type="button" aria-label="Add photo">
-                <span class="avatar-label{% if profile_image %} hidden{% endif %}" id="avatarLabel">add photo</span>
-                <img class="avatar-image{% if not profile_image %} hidden{% endif %}" id="avatarImage" src="{{ profile_image or '' }}" alt="Profile picture" />
-            </button>
-            <input id="avatarInput" type="file" accept="image/*" class="hidden" />
-            <p class="avatar-status" id="avatarStatus"></p>
+            <form action="{{ url_for('auth_bp.profile') }}" method="POST" enctype="multipart/form-data" class="avatar-form-container">
+                <label for="avatarInput" class="avatar-box{% if profile_image %} has-photo{% endif %}" aria-label="Add photo">
+                    <span class="avatar-label{% if profile_image %} hidden{% endif %}" id="avatarLabel">add photo</span>
+                    <img class="avatar-image{% if not profile_image %} hidden{% endif %}" id="avatarImage" src="{{ profile_image or '' }}" alt="Profile picture" />
+                </label>
+                <div class="avatar-controls">
+                    <input id="avatarInput" name="profile_photo" type="file" accept="image/*" class="avatar-file-input" />
+                    <button type="submit" class="btn-primary btn-sm">Save</button>
+                </div>
+            </form>
             <div class="username">{{ username or "Username" }}</div>
 
             <a
                 class="pantry-link"
                 id="pantryLink"
                 href="{{ url_for('items_bp.pantry_list', active=active_name) if active_name else url_for('items_bp.pantry_list') }}"
-            >My Pantry</a>
+            >My Pantry & All Items</a>
 
             <h1 class="list-heading">My Grocery Lists:</h1>
-            <section class="lists-frame" id="listsFrame" aria-label="Your grocery lists"></section>
+            <section class="lists-frame" id="listsFrame" aria-label="Your grocery lists">
+                {% if lists %}
+                    {% for lst in lists %}
+                        <div class="list-row {% if lst == active_list %}active{% endif %}">
+                            <a href="{{ url_for('auth_bp.profile', list=lst) }}" class="list-link"></a>
+                            <span >{{ lst }}</span>
+                            {% if lst == active_list %}
+                                <span class="active-badge">Active</span>
+                            {% else %}
+                                <form action="{{ url_for('items_bp.activate_list', list_name=lst) }}" method="POST" >
+                                    <input type="hidden" name="origin" value="profile_main" />
+                                    <button class="btn-primary btn-sm" type="submit">Activate</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="list-row">No Lists</div>
+                {% endif %}
+            </section>
 
             <nav class="bottom-nav" aria-label="Bottom navigation">
                 <a
@@ -63,23 +86,62 @@
             </nav>
         </section>
 
-        <section class="view hidden" id="detailView">
+        <section class="view {% if not request.args.get('list') %}hidden{% endif %}" id="detailView">
             <header class="detail-header">
-                <button class="back-button" id="backToListsBtn" type="button" aria-label="Back">&#8592;</button>
-                <h2 class="detail-title" id="viewModeTitle">Preview List Name</h2>
-                <div class="edit-header hidden" id="editHeader">
-                    <label for="editListNameInput">List Name:</label>
-                    <input id="editListNameInput" type="text" />
-                </div>
+                <a class="back-button" id="backToListsBtn" href="{{ url_for('auth_bp.profile') }}" aria-label="Back">&#8592;</a>
+                <h2 class="detail-title" id="viewModeTitle">{{ request.args.get('list') }}</h2>
             </header>
 
-            <section class="detail-frame" id="detailFrame" aria-label="List details"></section>
+            <section class="detail-frame" id="detailFrame" aria-label="List details">
+                {% if selected_list_data and selected_list_data.categories %}
+                    {% for category in selected_list_data.categories %}
+                        <details class="category-block" open>
+                            <summary class="category-summary">{{ category['name'] }}</summary>
+                            <div class="category-items">
+                                {% if category['items'] %}
+                                    {% for item in category['items'] %}
+                                        <div class="preview-item item-row">
+                                            <span>{{ item.name }}</span>
+                                            <span class="preview-item-qty">{{ item.quantity }}</span>
+
+                                            <div class="d-flex-gap-8">
+                                                <a href="{{ url_for('items_bp.edit_item_form', item_id=item.id) }}" class="btn-primary  btn-sm btn-auto-width">Edit</a>
+                                                <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST" onsubmit="return confirm('Delete this item?');" class="m-0">
+                                                    <input type="hidden" name="origin" value="profile_list_detail" />
+                                                    <button type="submit" class="btn-primary  btn-sm btn-auto-width">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-row"></div>
+                                {% endif %}
+                            </div>
+                        </details>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-row">N/A</div>
+                {% endif %}
+            </section>
 
             <section class="action-row" id="actionRow">
-                <button class="btn-primary btn-profile-action" id="activateBtn" type="button">Activate</button>
-                <button class="btn-primary btn-profile-action" id="editBtn" type="button">Edit</button>
-                <button class="btn-primary btn-profile-action" id="deleteBtn" type="button">Delete</button>
-                <button class="btn-primary hidden btn-profile-action" id="saveBtn" type="button">Save</button>
+                {% if request.args.get('list') %}
+                    {% if request.args.get('list') != active_list %}
+                        <form action="{{ url_for('items_bp.activate_list', list_name=request.args.get('list')) }}" method="POST" class="flex-1">
+                            <input type="hidden" name="origin" value="profile" />
+                            <button class="btn-primary  w-100" type="submit">Activate</button>
+                        </form>
+                    {% else %}
+                        <div class="flex-1">
+                            <button class="btn-primary  w-100" type="button" disabled>Activated</button>
+                        </div>
+                    {% endif %}
+                    
+                    <form action="{{ url_for('items_bp.delete_list', list_name=request.args.get('list')) }}" method="POST" class="flex-1" onsubmit="return confirm('Delete this entire list?');">
+                        <input type="hidden" name="origin" value="profile" />
+                        <button class="btn-primary  w-100" type="submit">Delete List</button>
+                    </form>
+                {% endif %}
             </section>
 
             <p class="status-text" id="statusText"></p>
@@ -110,744 +172,7 @@
         </section>
     </main>
 
-    <script id="profileSeedData" type="application/json">{{ {"lists": (lists or [])}|tojson }}</script>
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const openListName = params.get("list");
-        const requestedActiveName = params.get("active");
-
-        const profileUrl = "{{ url_for('auth_bp.profile') }}";
-        const homeUrl = "{{ url_for('auth_bp.home') }}";
-        const createListUrl = "{{ url_for('items_bp.create_item_form') }}";
-        const settingsUrl = "{{ url_for('auth_bp.settings') }}";
-        const activeListUrl = "{{ url_for('items_bp.active_list_page') }}";
-        const profilePhotoUploadUrl = "{{ url_for('auth_bp.settings') }}";
-        const updateItemUrlTemplate = "{{ url_for('items_bp.update_item', item_id='ITEM_ID_PLACEHOLDER') }}";
-        const deleteItemUrlTemplate = "{{ url_for('items_bp.delete_item', item_id='ITEM_ID_PLACEHOLDER') }}";
-
-        const seedScript = document.getElementById("profileSeedData");
-        let initialSeed = { lists: [] };
-        try {
-            initialSeed = JSON.parse(seedScript.textContent || "{}");
-        } catch (error) {
-            initialSeed = { lists: [] };
-        }
-
-        const profileListView = document.getElementById("profileListView");
-        const detailView = document.getElementById("detailView");
-        const listsFrame = document.getElementById("listsFrame");
-        const settingsLink = document.getElementById("settingsLink");
-        const avatarButton = document.getElementById("avatarButton");
-        const avatarInput = document.getElementById("avatarInput");
-        const avatarImage = document.getElementById("avatarImage");
-        const avatarLabel = document.getElementById("avatarLabel");
-        const avatarStatus = document.getElementById("avatarStatus");
-        const pantryLink = document.getElementById("pantryLink");
-        const detailFrame = document.getElementById("detailFrame");
-        const viewModeTitle = document.getElementById("viewModeTitle");
-        const editHeader = document.getElementById("editHeader");
-        const editListNameInput = document.getElementById("editListNameInput");
-        const actionRow = document.getElementById("actionRow");
-        const statusText = document.getElementById("statusText");
-        const activateBtn = document.getElementById("activateBtn");
-        const editBtn = document.getElementById("editBtn");
-        const deleteBtn = document.getElementById("deleteBtn");
-        const saveBtn = document.getElementById("saveBtn");
-
-        const state = {
-            listNames: Array.isArray(initialSeed.lists) ? initialSeed.lists.map(String) : [],
-            activeListName: null,
-            selectedListName: null,
-            originalList: null,
-            draftList: null,
-            isEditing: false,
-        };
-
-        function clone(value) {
-            return JSON.parse(JSON.stringify(value));
-        }
-
-        function setStatus(message) {
-            statusText.textContent = message || "";
-        }
-
-        function setAvatarStatus(message) {
-            avatarStatus.textContent = message || "";
-        }
-
-        function applyAvatarImage(src) {
-            const hasSource = Boolean(src);
-            avatarImage.src = hasSource ? src : "";
-            avatarImage.classList.toggle("hidden", !hasSource);
-            avatarLabel.classList.toggle("hidden", hasSource);
-            avatarButton.classList.toggle("has-photo", hasSource);
-        }
-
-        function buildUrl(basePath, query = {}) {
-            const url = new URL(basePath, window.location.origin);
-            Object.entries(query).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== "") {
-                    url.searchParams.set(key, value);
-                }
-            });
-            return `${url.pathname}${url.search}`;
-        }
-
-        function normalizeList(raw, fallbackName) {
-            const categories = Array.isArray(raw?.categories) ? raw.categories : [];
-            return {
-                name: String(raw?.name || fallbackName || "List Name"),
-                categories: categories.map((category, categoryIndex) => ({
-                    name: String(category?.name || `Category ${categoryIndex + 1}`),
-                    items: (Array.isArray(category?.items) ? category.items : []).map((item, itemIndex) => ({
-                        id: String(item?.id || `${categoryIndex}-${itemIndex}`),
-                        name: String(item?.name || `Item ${itemIndex + 1}`),
-                        quantity: String(item?.quantity ?? "1"),
-                    })),
-                })),
-            };
-        }
-
-        async function fetchListData(listName) {
-            const response = await fetch(
-                buildUrl(activeListUrl, {
-                    list: listName,
-                    active: state.activeListName,
-                }),
-                { method: "GET", credentials: "same-origin" },
-            );
-
-            if (!response.ok) {
-                throw new Error(`Failed to load list ${listName}`);
-            }
-
-            const html = await response.text();
-            const doc = new DOMParser().parseFromString(html, "text/html");
-            const jsonNode = doc.getElementById("activeListData");
-
-            if (!jsonNode) {
-                throw new Error("Missing active list payload");
-            }
-
-            let parsed;
-            try {
-                parsed = JSON.parse(jsonNode.textContent || "null");
-            } catch (error) {
-                throw new Error("Invalid active list payload");
-            }
-
-            return normalizeList(parsed || { name: listName, categories: [] }, listName);
-        }
-
-        function updateNavLinks() {
-            const homeHref = buildUrl(homeUrl, { active: state.activeListName });
-            const createHref = buildUrl(createListUrl, { active: state.activeListName });
-            const profileHref = buildUrl(profileUrl, { active: state.activeListName });
-            const pantryHref = buildUrl("{{ url_for('items_bp.pantry_list') }}", { active: state.activeListName });
-            const settingsHref = buildUrl(settingsUrl, { active: state.activeListName });
-
-            document.querySelectorAll('a[aria-label="Home"]').forEach((link) => {
-                link.href = homeHref;
-            });
-            document.querySelectorAll('a[aria-label="Add"]').forEach((link) => {
-                link.href = createHref;
-            });
-            document.querySelectorAll('a[aria-label="Profile"]').forEach((link) => {
-                link.href = profileHref;
-            });
-            if (pantryLink) {
-                pantryLink.href = pantryHref;
-            }
-            if (settingsLink) {
-                settingsLink.href = settingsHref;
-            }
-        }
-
-        function flattenListItems(listData) {
-            const flattened = [];
-            if (!listData || !Array.isArray(listData.categories)) {
-                return flattened;
-            }
-
-            listData.categories.forEach((category) => {
-                (Array.isArray(category.items) ? category.items : []).forEach((item) => {
-                    flattened.push({
-                        id: item.id,
-                        name: item.name,
-                        quantity: String(item.quantity),
-                        category: category.name,
-                    });
-                });
-            });
-            return flattened;
-        }
-
-        function renderListRows() {
-            listsFrame.innerHTML = "";
-
-            if (state.listNames.length === 0) {
-                const empty = document.createElement("div");
-                empty.className = "list-row";
-                empty.textContent = "No Lists";
-                listsFrame.appendChild(empty);
-                return;
-            }
-
-            state.listNames.forEach((listName) => {
-                const row = document.createElement("div");
-                row.className = "list-row";
-                if (listName === state.activeListName) {
-                    row.classList.add("active");
-                }
-
-                const name = document.createElement("span");
-                name.textContent = listName;
-                row.appendChild(name);
-
-                if (listName === state.activeListName) {
-                    const badge = document.createElement("span");
-                    badge.className = "active-badge";
-                    badge.textContent = "Active";
-                    row.appendChild(badge);
-                }
-
-                row.addEventListener("click", async () => {
-                    await openList(listName);
-                });
-
-                listsFrame.appendChild(row);
-            });
-        }
-
-        function renderPreviewCategory(category, openByDefault) {
-            const details = document.createElement("details");
-            details.className = "category-block";
-            if (openByDefault) {
-                details.open = true;
-            }
-
-            const summary = document.createElement("summary");
-            summary.className = "category-summary";
-            summary.textContent = category.name;
-            details.appendChild(summary);
-
-            const itemsContainer = document.createElement("div");
-            itemsContainer.className = "category-items";
-
-            if (category.items.length === 0) {
-                const empty = document.createElement("div");
-                empty.className = "empty-row";
-                itemsContainer.appendChild(empty);
-            } else {
-                category.items.forEach((item) => {
-                    const row = document.createElement("div");
-                    row.className = "preview-item";
-
-                    const name = document.createElement("span");
-                    name.textContent = item.name;
-
-                    const qty = document.createElement("span");
-                    qty.className = "preview-item-qty";
-                    qty.textContent = item.quantity;
-
-                    row.appendChild(name);
-                    row.appendChild(qty);
-                    itemsContainer.appendChild(row);
-                });
-            }
-
-            details.appendChild(itemsContainer);
-            return details;
-        }
-
-        function removeDraftCategory(index) {
-            if (!state.draftList || !Array.isArray(state.draftList.categories)) {
-                return;
-            }
-            state.draftList.categories.splice(index, 1);
-            renderDetailFrame();
-        }
-
-        function removeDraftItem(itemId) {
-            if (!state.draftList || !Array.isArray(state.draftList.categories)) {
-                return;
-            }
-            state.draftList.categories.forEach((category) => {
-                category.items = category.items.filter((item) => item.id !== itemId);
-            });
-            renderDetailFrame();
-        }
-
-        function renderEditCategory(category, categoryIndex) {
-            const details = document.createElement("details");
-            details.className = "category-block";
-            if (categoryIndex === 0) {
-                details.open = true;
-            }
-
-            const summary = document.createElement("summary");
-            summary.className = "category-summary edit";
-
-            const title = document.createElement("span");
-            title.textContent = category.name;
-            summary.appendChild(title);
-
-            const removeCategoryBtn = document.createElement("button");
-            removeCategoryBtn.className = "delete-btn";
-            removeCategoryBtn.type = "button";
-            removeCategoryBtn.textContent = "×";
-            removeCategoryBtn.setAttribute("aria-label", `Delete ${category.name}`);
-            removeCategoryBtn.addEventListener("click", (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                removeDraftCategory(categoryIndex);
-            });
-            summary.appendChild(removeCategoryBtn);
-
-            details.appendChild(summary);
-
-            const itemsContainer = document.createElement("div");
-            itemsContainer.className = "category-items";
-
-            if (category.items.length === 0) {
-                const empty = document.createElement("div");
-                empty.className = "empty-row";
-                itemsContainer.appendChild(empty);
-            } else {
-                category.items.forEach((item, itemIndex) => {
-                    const block = document.createElement("div");
-                    block.className = "edit-item";
-
-                    const topRow = document.createElement("div");
-                    topRow.className = "edit-item-top";
-
-                    const itemTitle = document.createElement("span");
-                    itemTitle.className = "edit-item-title";
-                    itemTitle.textContent = item.name || `Item ${itemIndex + 1}`;
-
-                    const itemQty = document.createElement("span");
-                    itemQty.className = "edit-item-qty";
-                    itemQty.textContent = item.quantity || "1";
-
-                    const removeItemBtn = document.createElement("button");
-                    removeItemBtn.className = "delete-btn";
-                    removeItemBtn.type = "button";
-                    removeItemBtn.textContent = "×";
-                    removeItemBtn.setAttribute("aria-label", `Delete ${item.name}`);
-                    removeItemBtn.addEventListener("click", () => {
-                        removeDraftItem(item.id);
-                    });
-
-                    topRow.appendChild(itemTitle);
-                    topRow.appendChild(itemQty);
-                    topRow.appendChild(removeItemBtn);
-
-                    const nameField = document.createElement("div");
-                    nameField.className = "edit-item-field";
-                    const nameLabel = document.createElement("label");
-                    nameLabel.textContent = "Name:";
-                    const nameInput = document.createElement("input");
-                    nameInput.type = "text";
-                    nameInput.value = item.name;
-                    nameInput.addEventListener("input", () => {
-                        item.name = nameInput.value;
-                        itemTitle.textContent = item.name || `Item ${itemIndex + 1}`;
-                    });
-                    nameField.appendChild(nameLabel);
-                    nameField.appendChild(nameInput);
-
-                    const qtyField = document.createElement("div");
-                    qtyField.className = "edit-item-field";
-                    const qtyLabel = document.createElement("label");
-                    qtyLabel.textContent = "Quantity:";
-                    const qtyInput = document.createElement("input");
-                    qtyInput.type = "text";
-                    qtyInput.value = item.quantity;
-                    qtyInput.addEventListener("input", () => {
-                        item.quantity = qtyInput.value;
-                        itemQty.textContent = item.quantity || "1";
-                    });
-                    qtyField.appendChild(qtyLabel);
-                    qtyField.appendChild(qtyInput);
-
-                    block.appendChild(topRow);
-                    block.appendChild(nameField);
-                    block.appendChild(qtyField);
-                    itemsContainer.appendChild(block);
-                });
-            }
-
-            details.appendChild(itemsContainer);
-            return details;
-        }
-
-        function renderDetailFrame() {
-            detailFrame.innerHTML = "";
-
-            const source = state.isEditing ? state.draftList : state.originalList;
-            if (!source || !Array.isArray(source.categories)) {
-                return;
-            }
-
-            if (source.categories.length === 0) {
-                const empty = document.createElement("div");
-                empty.className = "empty-row";
-                detailFrame.appendChild(empty);
-                return;
-            }
-
-            source.categories.forEach((category, index) => {
-                const categoryBlock = state.isEditing
-                    ? renderEditCategory(category, index)
-                    : renderPreviewCategory(category, false);
-                detailFrame.appendChild(categoryBlock);
-            });
-        }
-
-        function renderDetailHeader() {
-            if (!state.originalList) {
-                return;
-            }
-
-            if (state.isEditing) {
-                viewModeTitle.classList.add("hidden");
-                editHeader.classList.remove("hidden");
-                editListNameInput.value = state.draftList?.name || state.selectedListName || "";
-            } else {
-                viewModeTitle.classList.remove("hidden");
-                editHeader.classList.add("hidden");
-                viewModeTitle.textContent = state.originalList.name || state.selectedListName || "Preview List Name";
-            }
-        }
-
-        function renderActionRow() {
-            const editing = state.isEditing;
-            actionRow.classList.toggle("save-only", editing);
-            activateBtn.classList.toggle("hidden", editing);
-            editBtn.classList.toggle("hidden", editing);
-            deleteBtn.classList.toggle("hidden", editing);
-            saveBtn.classList.toggle("hidden", !editing);
-            activateBtn.textContent = state.selectedListName === state.activeListName ? "Activated" : "Activate";
-        }
-
-        function renderDetailView() {
-            renderDetailHeader();
-            renderActionRow();
-            renderDetailFrame();
-        }
-
-        function openDetailView() {
-            profileListView.classList.add("hidden");
-            detailView.classList.remove("hidden");
-            setStatus("");
-            renderDetailView();
-        }
-
-        function closeDetailView() {
-            detailView.classList.add("hidden");
-            profileListView.classList.remove("hidden");
-            state.isEditing = false;
-            state.originalList = null;
-            state.draftList = null;
-            state.selectedListName = null;
-            setStatus("");
-            renderListRows();
-        }
-
-        async function openList(listName) {
-            setStatus("Loading list...");
-            try {
-                const loadedList = await fetchListData(listName);
-                state.selectedListName = listName;
-                state.originalList = clone(loadedList);
-                state.draftList = clone(loadedList);
-                state.isEditing = false;
-                openDetailView();
-            } catch (error) {
-                setStatus("Could not load this list from MongoDB.");
-            }
-        }
-
-        function updateUrlForItem(itemId) {
-            return updateItemUrlTemplate.replace("ITEM_ID_PLACEHOLDER", encodeURIComponent(itemId));
-        }
-
-        function deleteUrlForItem(itemId) {
-            return deleteItemUrlTemplate.replace("ITEM_ID_PLACEHOLDER", encodeURIComponent(itemId));
-        }
-
-        async function postItemUpdate(payload) {
-            const body = new URLSearchParams({
-                list: payload.list,
-                name: payload.name,
-                quantity: payload.quantity,
-                status: "to_buy",
-                category: payload.category,
-            });
-
-            const response = await fetch(updateUrlForItem(payload.id), {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: body.toString(),
-                credentials: "same-origin",
-                redirect: "follow",
-            });
-
-            if (!response.ok) {
-                throw new Error(`Update failed for item ${payload.id}`);
-            }
-        }
-
-        async function postItemDelete(itemId) {
-            const response = await fetch(deleteUrlForItem(itemId), {
-                method: "POST",
-                credentials: "same-origin",
-                redirect: "follow",
-            });
-
-            if (!response.ok) {
-                throw new Error(`Delete failed for item ${itemId}`);
-            }
-        }
-
-        function validateDraft() {
-            if (!state.draftList) {
-                return "No draft list to save.";
-            }
-
-            const trimmedName = (state.draftList.name || "").trim();
-            if (!trimmedName) {
-                return "List name is required.";
-            }
-
-            for (const category of state.draftList.categories || []) {
-                if (!(category.name || "").trim()) {
-                    return "Category names cannot be empty.";
-                }
-                for (const item of category.items || []) {
-                    if (!(item.name || "").trim()) {
-                        return "Item names cannot be empty.";
-                    }
-                    const parsedQty = Number.parseInt(String(item.quantity).trim(), 10);
-                    if (!Number.isInteger(parsedQty) || parsedQty < 1) {
-                        return "All quantities must be whole numbers of at least 1.";
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        async function saveChanges() {
-            const validationError = validateDraft();
-            if (validationError) {
-                setStatus(validationError);
-                return;
-            }
-
-            const finalListName = state.draftList.name.trim();
-            state.draftList.name = finalListName;
-
-            const originalItems = flattenListItems(state.originalList);
-            const draftItems = flattenListItems(state.draftList).map((item) => ({
-                ...item,
-                name: item.name.trim(),
-                quantity: String(Number.parseInt(String(item.quantity).trim(), 10)),
-            }));
-
-            const draftById = new Map();
-            draftItems.forEach((item) => {
-                draftById.set(item.id, item);
-            });
-
-            const updates = [];
-            const deletes = [];
-            const listNameChanged = finalListName !== state.originalList.name;
-
-            originalItems.forEach((originalItem) => {
-                const draftItem = draftById.get(originalItem.id);
-                if (!draftItem) {
-                    deletes.push(originalItem.id);
-                    return;
-                }
-
-                const shouldUpdate =
-                    listNameChanged ||
-                    draftItem.name !== originalItem.name ||
-                    String(draftItem.quantity) !== String(originalItem.quantity) ||
-                    draftItem.category !== originalItem.category;
-
-                if (shouldUpdate) {
-                    updates.push({
-                        id: originalItem.id,
-                        list: finalListName,
-                        category: draftItem.category,
-                        name: draftItem.name,
-                        quantity: draftItem.quantity,
-                    });
-                }
-            });
-
-            saveBtn.disabled = true;
-            setStatus("Saving...");
-
-            try {
-                for (const updatePayload of updates) {
-                    await postItemUpdate(updatePayload);
-                }
-                for (const itemId of deletes) {
-                    await postItemDelete(itemId);
-                }
-
-                const nextActive =
-                    state.activeListName === state.selectedListName ? finalListName : state.activeListName;
-
-                const nextProfileUrl = buildUrl(profileUrl, {
-                    active: nextActive,
-                    list: finalListName,
-                });
-                window.location.href = nextProfileUrl;
-            } catch (error) {
-                saveBtn.disabled = false;
-                setStatus("Could not save changes to MongoDB. Check backend/Mongo connection and try again.");
-            }
-        }
-
-        async function deleteSelectedList() {
-            if (!state.originalList || !state.selectedListName) {
-                return;
-            }
-
-            deleteBtn.disabled = true;
-            setStatus("Deleting...");
-
-            try {
-                const allItems = flattenListItems(state.originalList);
-                for (const item of allItems) {
-                    await postItemDelete(item.id);
-                }
-
-                const nextActive = state.activeListName === state.selectedListName ? null : state.activeListName;
-                const nextProfileUrl = buildUrl(profileUrl, { active: nextActive });
-                window.location.href = nextProfileUrl;
-            } catch (error) {
-                deleteBtn.disabled = false;
-                setStatus("Could not delete list from MongoDB. Check backend/Mongo connection and try again.");
-            }
-        }
-
-        async function uploadProfileImage(file) {
-            if (!file) {
-                return;
-            }
-
-            const previousSrc = avatarImage.classList.contains("hidden") ? "" : avatarImage.src;
-            const previewSrc = URL.createObjectURL(file);
-            applyAvatarImage(previewSrc);
-            setAvatarStatus("Saving photo...");
-            avatarButton.disabled = true;
-
-            const formData = new FormData();
-            formData.append("profile_photo", file);
-
-            try {
-                const response = await fetch(profilePhotoUploadUrl, {
-                    method: "POST",
-                    body: formData,
-                    credentials: "same-origin",
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                    },
-                });
-
-                const payload = await response.json();
-                if (!response.ok || !payload.ok) {
-                    throw new Error(payload.error || "Unable to save image.");
-                }
-
-                if (!payload.profile_image) {
-                    throw new Error("Could not save profile picture.");
-                }
-                applyAvatarImage(payload.profile_image);
-                setAvatarStatus("added");
-            } catch (error) {
-                applyAvatarImage(previousSrc || "");
-                setAvatarStatus(error.message || "Could not save profile picture.");
-            } finally {
-                URL.revokeObjectURL(previewSrc);
-                avatarButton.disabled = false;
-            }
-        }
-
-        document.getElementById("backToListsBtn").addEventListener("click", closeDetailView);
-        avatarButton.addEventListener("click", () => {
-            avatarInput.click();
-        });
-        avatarInput.addEventListener("change", async () => {
-            const file = avatarInput.files && avatarInput.files[0];
-            avatarInput.value = "";
-            await uploadProfileImage(file);
-        });
-
-        activateBtn.addEventListener("click", () => {
-            if (!state.selectedListName) {
-                return;
-            }
-            state.activeListName = state.selectedListName;
-            updateNavLinks();
-            renderListRows();
-            renderActionRow();
-
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set("active", state.activeListName);
-            if (state.selectedListName) {
-                currentUrl.searchParams.set("list", state.selectedListName);
-            }
-            history.replaceState(null, "", `${currentUrl.pathname}${currentUrl.search}`);
-
-            setStatus("List marked active for this session.");
-        });
-
-        editBtn.addEventListener("click", () => {
-            if (!state.originalList) {
-                return;
-            }
-            state.isEditing = true;
-            state.draftList = clone(state.originalList);
-            renderDetailView();
-        });
-
-        deleteBtn.addEventListener("click", async () => {
-            await deleteSelectedList();
-        });
-
-        editListNameInput.addEventListener("input", () => {
-            if (!state.draftList) {
-                return;
-            }
-            state.draftList.name = editListNameInput.value;
-        });
-
-        saveBtn.addEventListener("click", async () => {
-            await saveChanges();
-        });
-
-        if (!state.listNames.includes(state.activeListName)) {
-            state.activeListName = requestedActiveName && state.listNames.includes(requestedActiveName)
-                ? requestedActiveName
-                : (state.listNames[0] || null);
-        }
-
-        applyAvatarImage(avatarImage.getAttribute("src") || "");
-        setAvatarStatus("");
-        updateNavLinks();
-        renderListRows();
-
-        if (openListName && state.listNames.includes(openListName)) {
-            openList(openListName);
-        }
-    </script>
+            
+        
 </body>
 </html>
