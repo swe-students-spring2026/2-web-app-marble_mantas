@@ -15,18 +15,18 @@
 			<button class="arrow-button" type="button" aria-label="Share">↱</button>
 		</header>
 
-		<section class="list-box" aria-label="Categories">
-			{% for list_entry in grouped_items %}
-				<h2>{{ list_entry.name }}</h2>
-				{% for category in list_entry.categories %}
-					<details class="category-block">
-						<summary class="category-toggle">{{ category.name }}</summary>
-						<div class="category-items">
-							{% for item in category.items %}
-								<div class="item-row">
-									<span>{{ item.name }}</span>
-									<span class="item-qty">{{ item.quantity }}</span>
-								</div>
+                <section class="list-box" aria-label="Categories">
+                        {% for list_entry in grouped_items %}
+                                <h2>{{ list_entry.name }}</h2>
+                                {% for category in list_entry.categories %}
+                                        <details class="category-block">
+                                                <summary class="category-toggle">{{ category.get('name', 'Uncategorized') }}</summary>
+                                                <div class="category-items">
+                                                        {% for item in category.get('items', []) %}
+                                                                <div class="item-row">
+                                                                        <span>{{ item.name }}</span>
+                                                                        <span class="item-qty">{{ item.quantity }}</span>
+                                                                </div>
 							{% else %}
 								<div class="item-empty">No items</div>
 							{% endfor %}

@@ -202,7 +202,7 @@ def edit_item_form(item_id):
     item = serialize_item(item_doc)
     return render_template("items_form.html", **build_form_context(item=item))
 
-@items_bp.post("/<item_id>/edit")
+@items_bp.post("/<item_id>/update")
 @login_required
 def update_item(item_id):
     updates, error = validate_and_parse_item(request.form)

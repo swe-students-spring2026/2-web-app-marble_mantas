@@ -51,7 +51,28 @@
             <p class="target-category" id="targetCategoryText"></p>
         </section>
 
-        <section class="pantry-frame" id="pantryFrame" aria-label="Pantry categories"></section>
+        <section class="pantry-frame" aria-label="Pantry categories (Jinja2)">
+            {% for category in grouped_items %}
+                <details class="category-block">
+                    <summary class="category-summary">{{ category.get('name', 'Uncategorized') }}</summary>
+                    <div class="category-items">
+                        {% for item in category.get('items', []) %}
+                            <div class="item-row">
+                                <span>{{ item.name }}</span>
+                                <span class="item-qty">{{ item.quantity }}</span>
+                            </div>
+                        {% else %}
+                            <div class="empty-row">No items</div>
+                        {% endfor %}
+                    </div>
+                </details>
+            {% else %}
+                <div class="empty-row">no match</div>
+            {% endfor %}
+        </section>
+        
+        <!-- Javascript renders into this section -->
+        <section class="pantry-frame hidden" id="pantryFrame" aria-label="Pantry categories"></section>
 
         <section class="action-row" id="actionRow">
             <button class="btn-primary btn-pantry-action" id="editBtn" type="button">Edit</button>
@@ -437,6 +458,7 @@
         }
 
         function renderFrame() {
+            /* Temporarily commented out to show Jinja2 HTML instead
             pantryFrame.innerHTML = "";
 
             let visible;
@@ -465,6 +487,7 @@
                     : renderViewCategory(category, false);
                 pantryFrame.appendChild(block);
             });
+            */
         }
 
         function renderTargetCategory() {
