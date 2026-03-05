@@ -210,7 +210,7 @@ body {
     font-weight: 400;
     text-align: center;
     cursor: pointer;
-    background: #e5e5e5;
+    background: #fff;
 }
 
 .preview-category-toggle::-webkit-details-marker {
@@ -222,7 +222,7 @@ body {
 }
 
 .preview-category-items {
-    background: #e5e5e5;
+    background: #fff;
 }
 
 .preview-item-row {

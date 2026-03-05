@@ -1,5 +1,5 @@
 body {
-    background: #d9d9d9;
+    background: #fff;
 }
 
 .page {
@@ -60,7 +60,7 @@ body {
 }
 
 details[open] > .category-toggle {
-    background: #efefef;
+    background: #fff;
 }
 
 .category-items {

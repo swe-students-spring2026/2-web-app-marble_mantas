@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Pantry</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pantry_list.css') }}">
+</head>
+<body>
+    {% set active_name = request.args.get('active') %}
+
+    <main class="page">
+        <header class="pantry-header">
+            <a
+                class="back-link"
+                href="{{ url_for('auth_bp.profile', active=active_name) if active_name else url_for('auth_bp.profile') }}"
+                aria-label="Back"
+            >&#8592;</a>
+            <h1 class="pantry-title">Your Current Pantry</h1>
+        </header>
+
+        <div class="search-row">
+            <input id="searchInput" class="search-input" type="text" placeholder="search..." />
+            <p class="search-result-message" id="searchResultMessage"></p>
+        </div>
+
+        <section class="edit-controls hidden" id="editControls">
+            <div class="field-row category-add-row">
+                <label for="categoryInput">Categories:</label>
+                <input id="categoryInput" type="text" />
+                <button class="category-add-btn" id="addCategoryBtn" type="button" aria-label="Add category">+</button>
+            </div>
+
+            <div class="section-title">Add Item:</div>
+
+            <div class="field-row">
+                <label for="itemNameInput">Name:</label>
+                <input id="itemNameInput" type="text" />
+            </div>
+
+            <div class="field-row">
+                <label for="itemQtyInput">Quantity:</label>
+                <input id="itemQtyInput" type="text" />
+            </div>
+
+            <div class="add-item-row">
+                <button class="btn-primary btn-pantry-action" id="addItemBtn" type="button">Add</button>
+            </div>
+
+            <p class="target-category" id="targetCategoryText"></p>
+        </section>
+
+        <section class="pantry-frame" id="pantryFrame" aria-label="Pantry categories"></section>
+
+        <section class="action-row" id="actionRow">
+            <button class="btn-primary btn-pantry-action" id="editBtn" type="button">Edit</button>
+            <button class="btn-primary btn-pantry-action hidden" id="saveBtn" type="button">Save</button>
+        </section>
+
+        <p class="status-text" id="statusText"></p>
+
+        <nav class="bottom-nav" aria-label="Bottom navigation">
+            <a
+                class="icon-button"
+                href="{{ url_for('auth_bp.home', active=active_name) if active_name else url_for('auth_bp.home') }}"
+                aria-label="Home"
+            >
+                <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
+            </a>
+            <a
+                class="icon-button"
+                href="{{ url_for('items_bp.create_item_form', active=active_name) if active_name else url_for('items_bp.create_item_form') }}"
+                aria-label="Add"
+            >
+                <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
+            </a>
+            <a
+                class="icon-button"
+                href="{{ url_for('auth_bp.profile', active=active_name) if active_name else url_for('auth_bp.profile') }}"
+                aria-label="Profile"
+            >
+                <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
+            </a>
+        </nav>
+    </main>
+
+    <script id="pantrySeedData" type="application/json">{{ (items or [])|tojson }}</script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const requestedActiveName = params.get("active");
+
+        const homeUrl = "{{ url_for('auth_bp.home') }}";
+        const profileUrl = "{{ url_for('auth_bp.profile') }}";
+        const createListUrl = "{{ url_for('items_bp.create_item_form') }}";
+        const pantryUrl = "{{ url_for('items_bp.pantry_list') }}";
+        const createItemUrl = "{{ url_for('items_bp.create_item') }}";
+        const updateItemUrlTemplate = "{{ url_for('items_bp.update_item', item_id='ITEM_ID_PLACEHOLDER') }}";
+        const deleteItemUrlTemplate = "{{ url_for('items_bp.delete_item', item_id='ITEM_ID_PLACEHOLDER') }}";
+
+        const seedNode = document.getElementById("pantrySeedData");
+        let seedItems = [];
+        try {
+            seedItems = JSON.parse(seedNode.textContent || "[]");
+        } catch (error) {
+            seedItems = [];
+        }
+
+        const searchInput = document.getElementById("searchInput");
+        const searchResultMessage = document.getElementById("searchResultMessage");
+        const pantryFrame = document.getElementById("pantryFrame");
+        const editControls = document.getElementById("editControls");
+        const categoryInput = document.getElementById("categoryInput");
+        const itemNameInput = document.getElementById("itemNameInput");
+        const itemQtyInput = document.getElementById("itemQtyInput");
+        const targetCategoryText = document.getElementById("targetCategoryText");
+        const statusText = document.getElementById("statusText");
+        const editBtn = document.getElementById("editBtn");
+        const saveBtn = document.getElementById("saveBtn");
+
+        const state = {
+            activeListName: requestedActiveName || null,
+            originalItems: [],
+            viewItems: [],
+            draftCategories: [],
+            isEditing: false,
+            selectedCategoryName: null,
+            searchQuery: "",
+            nextClientId: 1,
+        };
+        let searchDebounceTimer = null;
+        let searchRequestToken = 0;
+
+        function buildUrl(basePath, query = {}) {
+            const url = new URL(basePath, window.location.origin);
+            Object.entries(query).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== "") {
+                    url.searchParams.set(key, value);
+                }
+            });
+            return `${url.pathname}${url.search}`;
+        }
+
+        function setStatus(message) {
+            statusText.textContent = message || "";
+        }
+
+        function setSearchMessage(message) {
+            searchResultMessage.textContent = message || "";
+        }
+
+        function makeClientId() {
+            const next = `new-${state.nextClientId}`;
+            state.nextClientId += 1;
+            return next;
+        }
+
+        function normalizeSeedItems(items) {
+            return (Array.isArray(items) ? items : []).map((item, index) => ({
+                id: String(item?.id || ""),
+                clientId: `existing-${index}`,
+                name: String(item?.name || ""),
+                quantity: String(item?.quantity ?? "1"),
+                category: String(item?.category || "Uncategorized"),
+                list: String(item?.list || "Pantry"),
+            }));
+        }
+
+        function groupByCategory(items) {
+            const grouped = new Map();
+            items.forEach((item) => {
+                const categoryName = item.category || "Uncategorized";
+                if (!grouped.has(categoryName)) {
+                    grouped.set(categoryName, []);
+                }
+                grouped.get(categoryName).push({
+                    id: item.id || null,
+                    clientId: item.clientId || makeClientId(),
+                    name: item.name,
+                    quantity: String(item.quantity),
+                    list: item.list || "Pantry",
+                });
+            });
+
+            return Array.from(grouped.entries()).map(([name, categoryItems]) => ({
+                name,
+                items: categoryItems,
+            }));
+        }
+
+        function flattenDraftCategories(categories) {
+            const flattened = [];
+            (Array.isArray(categories) ? categories : []).forEach((category) => {
+                (Array.isArray(category.items) ? category.items : []).forEach((item) => {
+                    flattened.push({
+                        id: item.id || null,
+                        clientId: item.clientId,
+                        name: String(item.name || ""),
+                        quantity: String(item.quantity || "1"),
+                        category: String(category.name || "Uncategorized"),
+                        list: String(item.list || "Pantry"),
+                    });
+                });
+            });
+            return flattened;
+        }
+
+        function filterCategories(categories) {
+            const query = state.searchQuery.trim().toLowerCase();
+            if (!query) {
+                return categories;
+            }
+
+            return categories
+                .map((category) => {
+                    const categoryMatches = category.name.toLowerCase().includes(query);
+                    if (categoryMatches) {
+                        return {
+                            name: category.name,
+                            items: [...category.items],
+                        };
+                    }
+
+                    const filteredItems = category.items.filter((item) => {
+                        const nameMatch = String(item.name || "").toLowerCase().includes(query);
+                        const qtyMatch = String(item.quantity || "").toLowerCase().includes(query);
+                        return nameMatch || qtyMatch;
+                    });
+
+                    if (filteredItems.length > 0) {
+                        return {
+                            name: category.name,
+                            items: filteredItems,
+                        };
+                    }
+
+                    return null;
+                })
+                .filter(Boolean);
+        }
+
+        async function fetchPantrySearch(query) {
+            const url = new URL(pantryUrl, window.location.origin);
+            if (query) {
+                url.searchParams.set("q", query);
+            }
+            url.searchParams.set("format", "json");
+            if (state.activeListName) {
+                url.searchParams.set("active", state.activeListName);
+            }
+
+            const response = await fetch(`${url.pathname}${url.search}`, {
+                method: "GET",
+                credentials: "same-origin",
+            });
+            if (!response.ok) {
+                throw new Error(`Search failed with status ${response.status}`);
+            }
+
+            const payload = await response.json();
+            return normalizeSeedItems(payload.items || []);
+        }
+
+        function renderViewCategory(category, openByDefault) {
+            const details = document.createElement("details");
+            details.className = "category-block";
+            if (openByDefault) {
+                details.open = true;
+            }
+
+            const summary = document.createElement("summary");
+            summary.className = "category-summary";
+            summary.textContent = category.name;
+            details.appendChild(summary);
+
+            const itemsWrap = document.createElement("div");
+            itemsWrap.className = "category-items";
+
+            if (category.items.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty-row";
+                itemsWrap.appendChild(empty);
+            } else {
+                category.items.forEach((item) => {
+                    const row = document.createElement("div");
+                    row.className = "item-row";
+
+                    const name = document.createElement("span");
+                    name.textContent = item.name;
+
+                    const qty = document.createElement("span");
+                    qty.className = "item-qty";
+                    qty.textContent = item.quantity;
+
+                    row.appendChild(name);
+                    row.appendChild(qty);
+                    itemsWrap.appendChild(row);
+                });
+            }
+
+            details.appendChild(itemsWrap);
+            return details;
+        }
+
+        function removeCategory(categoryName) {
+            state.draftCategories = state.draftCategories.filter((category) => category.name !== categoryName);
+            if (state.selectedCategoryName === categoryName) {
+                state.selectedCategoryName = null;
+            }
+            renderFrame();
+            renderTargetCategory();
+        }
+
+        function removeItem(clientId) {
+            state.draftCategories.forEach((category) => {
+                category.items = category.items.filter((item) => item.clientId !== clientId);
+            });
+            renderFrame();
+        }
+
+        function renderEditCategory(category, openByDefault) {
+            const details = document.createElement("details");
+            details.className = "category-block";
+            if (openByDefault) {
+                details.open = true;
+            }
+
+            const summary = document.createElement("summary");
+            summary.className = "category-summary edit";
+            if (state.selectedCategoryName === category.name) {
+                summary.classList.add("selected");
+            }
+
+            const title = document.createElement("span");
+            title.textContent = category.name;
+            summary.appendChild(title);
+
+            const removeCategoryBtn = document.createElement("button");
+            removeCategoryBtn.className = "delete-btn";
+            removeCategoryBtn.type = "button";
+            removeCategoryBtn.textContent = "×";
+            removeCategoryBtn.setAttribute("aria-label", `Delete ${category.name}`);
+            removeCategoryBtn.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                removeCategory(category.name);
+            });
+            summary.appendChild(removeCategoryBtn);
+
+            summary.addEventListener("click", () => {
+                state.selectedCategoryName = category.name;
+                renderTargetCategory();
+            });
+
+            details.appendChild(summary);
+
+            const itemsWrap = document.createElement("div");
+            itemsWrap.className = "category-items";
+
+            if (category.items.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty-row";
+                itemsWrap.appendChild(empty);
+            } else {
+                category.items.forEach((item, itemIndex) => {
+                    const block = document.createElement("div");
+                    block.className = "edit-item";
+
+                    const topRow = document.createElement("div");
+                    topRow.className = "edit-item-top";
+
+                    const itemTitle = document.createElement("span");
+                    itemTitle.className = "edit-item-title";
+                    itemTitle.textContent = item.name || `Item ${itemIndex + 1}`;
+
+                    const itemQty = document.createElement("span");
+                    itemQty.className = "edit-item-qty";
+                    itemQty.textContent = item.quantity || "1";
+
+                    const removeItemBtn = document.createElement("button");
+                    removeItemBtn.className = "delete-btn";
+                    removeItemBtn.type = "button";
+                    removeItemBtn.textContent = "×";
+                    removeItemBtn.setAttribute("aria-label", `Delete ${item.name}`);
+                    removeItemBtn.addEventListener("click", () => {
+                        removeItem(item.clientId);
+                    });
+
+                    topRow.appendChild(itemTitle);
+                    topRow.appendChild(itemQty);
+                    topRow.appendChild(removeItemBtn);
+
+                    const nameField = document.createElement("div");
+                    nameField.className = "edit-item-field";
+                    const nameLabel = document.createElement("label");
+                    nameLabel.textContent = "Name:";
+                    const nameInput = document.createElement("input");
+                    nameInput.type = "text";
+                    nameInput.value = item.name;
+                    nameInput.addEventListener("input", () => {
+                        item.name = nameInput.value;
+                        itemTitle.textContent = item.name || `Item ${itemIndex + 1}`;
+                    });
+                    nameField.appendChild(nameLabel);
+                    nameField.appendChild(nameInput);
+
+                    const qtyField = document.createElement("div");
+                    qtyField.className = "edit-item-field";
+                    const qtyLabel = document.createElement("label");
+                    qtyLabel.textContent = "Quantity:";
+                    const qtyInput = document.createElement("input");
+                    qtyInput.type = "text";
+                    qtyInput.value = item.quantity;
+                    qtyInput.addEventListener("input", () => {
+                        item.quantity = qtyInput.value;
+                        itemQty.textContent = item.quantity || "1";
+                    });
+                    qtyField.appendChild(qtyLabel);
+                    qtyField.appendChild(qtyInput);
+
+                    block.appendChild(topRow);
+                    block.appendChild(nameField);
+                    block.appendChild(qtyField);
+                    itemsWrap.appendChild(block);
+                });
+            }
+
+            details.appendChild(itemsWrap);
+            return details;
+        }
+
+        function renderFrame() {
+            pantryFrame.innerHTML = "";
+
+            let visible;
+            if (state.isEditing) {
+                visible = filterCategories(state.draftCategories);
+            } else {
+                visible = groupByCategory(state.viewItems);
+            }
+
+            if (!visible || visible.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty-row";
+                pantryFrame.appendChild(empty);
+                if (state.searchQuery.trim()) {
+                    setSearchMessage("no match");
+                } else {
+                    setSearchMessage("");
+                }
+                return;
+            }
+
+            setSearchMessage("");
+            visible.forEach((category) => {
+                const block = state.isEditing
+                    ? renderEditCategory(category, false)
+                    : renderViewCategory(category, false);
+                pantryFrame.appendChild(block);
+            });
+        }
+
+        function renderTargetCategory() {
+            if (!state.isEditing) {
+                targetCategoryText.textContent = "";
+                return;
+            }
+
+            if (state.selectedCategoryName) {
+                targetCategoryText.textContent = `Adding items to: ${state.selectedCategoryName}`;
+            } else {
+                targetCategoryText.textContent = "Select or add a category to add items.";
+            }
+        }
+
+        function renderActionRow() {
+            editBtn.classList.toggle("hidden", state.isEditing);
+            saveBtn.classList.toggle("hidden", !state.isEditing);
+        }
+
+        function renderEditControls() {
+            editControls.classList.toggle("hidden", !state.isEditing);
+            renderTargetCategory();
+        }
+
+        function updateNavLinks() {
+            const homeHref = buildUrl(homeUrl, { active: state.activeListName });
+            const profileHref = buildUrl(profileUrl, { active: state.activeListName });
+            const createHref = buildUrl(createListUrl, { active: state.activeListName });
+
+            document.querySelectorAll('a[aria-label="Home"]').forEach((link) => {
+                link.href = homeHref;
+            });
+            document.querySelectorAll('a[aria-label="Profile"]').forEach((link) => {
+                link.href = profileHref;
+            });
+            document.querySelectorAll('a[aria-label="Add"]').forEach((link) => {
+                link.href = createHref;
+            });
+        }
+
+        function addCategory() {
+            const categoryName = categoryInput.value.trim();
+            if (!categoryName) {
+                setStatus("Enter a category first.");
+                return;
+            }
+
+            const exists = state.draftCategories.some(
+                (category) => category.name.toLowerCase() === categoryName.toLowerCase(),
+            );
+            if (exists) {
+                setStatus("That category already exists.");
+                return;
+            }
+
+            state.draftCategories.push({
+                name: categoryName,
+                items: [],
+            });
+            state.selectedCategoryName = categoryName;
+            categoryInput.value = "";
+            setStatus("");
+            renderFrame();
+            renderTargetCategory();
+        }
+
+        function addItem() {
+            const itemName = itemNameInput.value.trim();
+            const quantityText = itemQtyInput.value.trim();
+            const parsedQuantity = Number.parseInt(quantityText, 10);
+
+            if (!state.selectedCategoryName) {
+                setStatus("Select a category before adding an item.");
+                return;
+            }
+            if (!itemName) {
+                setStatus("Enter an item name.");
+                return;
+            }
+            if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
+                setStatus("Quantity must be a whole number of at least 1.");
+                return;
+            }
+
+            const targetCategory = state.draftCategories.find(
+                (category) => category.name === state.selectedCategoryName,
+            );
+            if (!targetCategory) {
+                setStatus("Selected category was not found.");
+                return;
+            }
+
+            targetCategory.items.push({
+                id: null,
+                clientId: makeClientId(),
+                name: itemName,
+                quantity: String(parsedQuantity),
+                list: "Pantry",
+            });
+
+            itemNameInput.value = "";
+            itemQtyInput.value = "";
+            setStatus("");
+            renderFrame();
+        }
+
+        function updateItemUrl(itemId) {
+            return updateItemUrlTemplate.replace("ITEM_ID_PLACEHOLDER", encodeURIComponent(itemId));
+        }
+
+        function deleteItemUrl(itemId) {
+            return deleteItemUrlTemplate.replace("ITEM_ID_PLACEHOLDER", encodeURIComponent(itemId));
+        }
+
+        async function postCreateItem(item) {
+            const body = new URLSearchParams({
+                list: "Pantry",
+                category: item.category,
+                name: item.name,
+                quantity: item.quantity,
+                status: "pantry",
+            });
+
+            const response = await fetch(createItemUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: body.toString(),
+                credentials: "same-origin",
+                redirect: "follow",
+            });
+
+            if (!response.ok) {
+                throw new Error("Create failed");
+            }
+        }
+
+        async function postUpdateItem(item) {
+            const body = new URLSearchParams({
+                list: "Pantry",
+                category: item.category,
+                name: item.name,
+                quantity: item.quantity,
+                status: "pantry",
+            });
+
+            const response = await fetch(updateItemUrl(item.id), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: body.toString(),
+                credentials: "same-origin",
+                redirect: "follow",
+            });
+
+            if (!response.ok) {
+                throw new Error("Update failed");
+            }
+        }
+
+        async function postDeleteItem(itemId) {
+            const response = await fetch(deleteItemUrl(itemId), {
+                method: "POST",
+                credentials: "same-origin",
+                redirect: "follow",
+            });
+
+            if (!response.ok) {
+                throw new Error("Delete failed");
+            }
+        }
+
+        function validateDraft() {
+            for (const category of state.draftCategories) {
+                if (!(category.name || "").trim()) {
+                    return "Category names cannot be empty.";
+                }
+
+                for (const item of category.items) {
+                    if (!(item.name || "").trim()) {
+                        return "Item names cannot be empty.";
+                    }
+
+                    const parsedQty = Number.parseInt(String(item.quantity || "").trim(), 10);
+                    if (!Number.isInteger(parsedQty) || parsedQty < 1) {
+                        return "All quantities must be whole numbers of at least 1.";
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        async function savePantry() {
+            const validationError = validateDraft();
+            if (validationError) {
+                setStatus(validationError);
+                return;
+            }
+
+            const originalById = new Map();
+            state.originalItems.forEach((item) => {
+                if (item.id) {
+                    originalById.set(item.id, item);
+                }
+            });
+
+            const draftFlat = flattenDraftCategories(state.draftCategories).map((item) => ({
+                ...item,
+                name: item.name.trim(),
+                quantity: String(Number.parseInt(String(item.quantity).trim(), 10)),
+            }));
+
+            const seenOriginalIds = new Set();
+            const updates = [];
+            const creates = [];
+
+            draftFlat.forEach((draftItem) => {
+                if (draftItem.id && originalById.has(draftItem.id)) {
+                    const originalItem = originalById.get(draftItem.id);
+                    seenOriginalIds.add(draftItem.id);
+
+                    const changed =
+                        draftItem.name !== originalItem.name ||
+                        String(draftItem.quantity) !== String(originalItem.quantity) ||
+                        draftItem.category !== originalItem.category ||
+                        String(originalItem.list || "") !== "Pantry";
+
+                    if (changed) {
+                        updates.push(draftItem);
+                    }
+                } else {
+                    creates.push(draftItem);
+                }
+            });
+
+            const deletes = [];
+            originalById.forEach((_, id) => {
+                if (!seenOriginalIds.has(id)) {
+                    deletes.push(id);
+                }
+            });
+
+            saveBtn.disabled = true;
+            setStatus("Saving...");
+
+            try {
+                for (const updateItem of updates) {
+                    await postUpdateItem(updateItem);
+                }
+                for (const newItem of creates) {
+                    await postCreateItem(newItem);
+                }
+                for (const itemId of deletes) {
+                    await postDeleteItem(itemId);
+                }
+
+                window.location.href = buildUrl(pantryUrl, { active: state.activeListName });
+            } catch (error) {
+                saveBtn.disabled = false;
+                setStatus("Could not save pantry to MongoDB. Check backend/Mongo connection and try again.");
+            }
+        }
+
+        function enterEditMode() {
+            state.isEditing = true;
+            state.draftCategories = groupByCategory(state.originalItems.map((item) => ({ ...item })));
+            state.selectedCategoryName = null;
+            setStatus("");
+            renderEditControls();
+            renderActionRow();
+            renderFrame();
+        }
+
+        async function runPantrySearch() {
+            if (state.isEditing) {
+                renderFrame();
+                return;
+            }
+
+            const currentToken = ++searchRequestToken;
+            try {
+                const items = await fetchPantrySearch(state.searchQuery.trim());
+                if (currentToken !== searchRequestToken) {
+                    return;
+                }
+                state.viewItems = items;
+                renderFrame();
+            } catch (error) {
+                if (currentToken !== searchRequestToken) {
+                    return;
+                }
+                state.viewItems = [...state.originalItems];
+                setSearchMessage("Search unavailable");
+                renderFrame();
+            }
+        }
+
+        searchInput.addEventListener("input", () => {
+            state.searchQuery = searchInput.value || "";
+
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
+            }
+            searchDebounceTimer = setTimeout(() => {
+                runPantrySearch();
+            }, 220);
+        });
+
+        document.getElementById("addCategoryBtn").addEventListener("click", addCategory);
+        document.getElementById("addItemBtn").addEventListener("click", addItem);
+        editBtn.addEventListener("click", enterEditMode);
+        saveBtn.addEventListener("click", savePantry);
+
+        categoryInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                addCategory();
+            }
+        });
+
+        itemQtyInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                addItem();
+            }
+        });
+
+        state.originalItems = normalizeSeedItems(seedItems);
+        state.viewItems = [...state.originalItems];
+        state.activeListName = state.activeListName || null;
+
+        updateNavLinks();
+        renderEditControls();
+        renderActionRow();
+        renderFrame();
+    </script>
+</body>
+</html>

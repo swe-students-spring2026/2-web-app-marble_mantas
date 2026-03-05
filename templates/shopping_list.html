@@ -28,7 +28,7 @@
 
 		<section class="list-box" aria-label="Categories">
 			{% for category in categories %}
-				<details class="category-block" {% if loop.first %}open{% endif %}>
+				<details class="category-block">
 					<summary class="category-toggle">{{ category }}</summary>
 					<div class="category-items">
 						{% set ns = namespace(found=false) %}
