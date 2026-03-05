@@ -96,10 +96,14 @@ def register():
     if request.method == "POST":
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
-        if not username or not password:
-            error = "Username and password are required"
+        confirm_password = request.form.get("confirm_password") or ""
+
+        if not username or not password or not confirm_password:
+            error = "Username, password, and confirm password are required"
         elif len(password) < 6:
             error = "Password must be at least 6 characters long"
+        elif password != confirm_password:
+            error = "Passwords must match"
         else:
             user = User.create(username, password)
             if not user:
