@@ -46,10 +46,9 @@
                 <input id="confirmPasswordInput" name="confirm_password" type="password" />
             </div>
 
-            <div class="photo-row">
-                <button class="photo-link" id="changePhotoBtn" type="button">Change Profile Picture</button>
-                <span class="photo-status" id="photoAddedText">{% if photo_added %}added{% endif %}</span>
-                <input id="profilePhotoInput" name="profile_photo" type="file" accept="image/*" class="hidden" />
+            <div class="field-row">
+                <label for="profilePhotoInput">Profile Pic:</label>
+                <input id="profilePhotoInput" name="profile_photo" type="file" accept="image/*"" />
             </div>
 
             {% if error %}
@@ -90,24 +89,5 @@
         </nav>
     </main>
 
-    <script>
-        const changePhotoBtn = document.getElementById("changePhotoBtn");
-        const profilePhotoInput = document.getElementById("profilePhotoInput");
-        const photoAddedText = document.getElementById("photoAddedText");
-        const formMessage = document.getElementById("formMessage");
-
-        changePhotoBtn.addEventListener("click", () => {
-            profilePhotoInput.click();
-        });
-
-        profilePhotoInput.addEventListener("change", () => {
-            if (profilePhotoInput.files && profilePhotoInput.files.length > 0) {
-                photoAddedText.textContent = "added";
-                if (formMessage) {
-                    formMessage.textContent = "";
-                }
-            }
-        });
-    </script>
 </body>
 </html>

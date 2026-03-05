@@ -19,20 +19,20 @@
 
                 <div class="field-row">
                     <label for="listNameInput">List Name:</label>
-                    <input id="listNameInput" name="list" type="text" value="{{ item.get('list', '') if item else request.args.get('list', 'My List') }}" list="existingLists" required />
+                    <input id="listNameInput" name="list" type="text" value="{{ item.get('list', '') if item else request.args.get('list', 'My List') }}" list="existingLists" required autocomplete="off" />
                     <datalist id="existingLists">
                         {% for l in existing_lists %}
-                            <option value="{{ l }}"></option>
+                            <option value="{{ l }}">{{ l }}</option>
                         {% endfor %}
                     </datalist>
                 </div>
 
                 <div class="field-row">
                     <label for="categoryInput">Category:</label>
-                    <input id="categoryInput" name="category" type="text" value="{{ item.get('category', '') if item else 'Uncategorized' }}" list="existingCategories" />
+                    <input id="categoryInput" name="category" type="text" value="{{ item.get('category', '') if item else 'Uncategorized' }}" list="existingCategories" autocomplete="off" />
                     <datalist id="existingCategories">
                         {% for c in existing_categories %}
-                            <option value="{{ c }}"></option>
+                            <option value="{{ c }}">{{ c }}</option>
                         {% endfor %}
                     </datalist>
                 </div>
@@ -69,7 +69,7 @@
             
             {% if item and item.get('id') %}
             <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST" class="p-0-2 mb-20">
-                <button type="submit" class="btn-primary  btn-danger" class="w-100" onsubmit="return confirm('Delete this item?');">Delete Item</button>
+                <button type="submit" class="btn-primary  btn-danger" class="w-100" >Delete Item</button>
             </form>
             {% endif %}
 
