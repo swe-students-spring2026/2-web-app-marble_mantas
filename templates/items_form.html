@@ -58,18 +58,18 @@
                 <input type="hidden" name="origin" value="{{ request.args.get('origin', '') }}">
 
                 <div class="create-row-flex">
-                    <button class="btn-primary btn-form-action form-flex-child" id="createListBtn" type="submit">
+                    <button class="btn-primary  form-flex-child" id="createListBtn" type="submit">
                         {% if item and item.get('id') %}Update{% else %}Create{% endif %}
                     </button>
                     {% if item and item.get('id') %}
-                        <a href="{{ request.referrer or url_for('items_bp.pantry_list') }}" class="btn-primary btn-form-action btn-cancel form-flex-child">Cancel</a>
+                        <a href="{{ request.referrer or url_for('items_bp.pantry_list') }}" class="btn-primary  btn-cancel form-flex-child">Cancel</a>
                     {% endif %}
                 </div>
             </form>
             
             {% if item and item.get('id') %}
-            <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST" style="padding: 0 2px; margin-bottom: 20px;">
-                <button type="submit" class="btn-primary btn-form-action btn-danger" style="width: 100%;" onsubmit="return confirm('Delete this item?');">Delete Item</button>
+            <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST" class="p-0-2 mb-20">
+                <button type="submit" class="btn-primary  btn-danger" class="w-100" onsubmit="return confirm('Delete this item?');">Delete Item</button>
             </form>
             {% endif %}
 

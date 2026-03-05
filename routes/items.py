@@ -185,6 +185,11 @@ def create_item():
     data["user_id"] = current_user.id
     data["created_at"] = datetime.now()
     items.insert_one(data)
+    
+    origin = request.form.get("origin")
+    if origin == "shopping_list":
+        return redirect(url_for("items_bp.shopping_list"))
+
     if data["status"] == "pantry":
         return redirect(url_for("items_bp.pantry_list"))
     return redirect(url_for("items_bp.active_list_page", list=data["list"]))
@@ -219,6 +224,8 @@ def update_item(item_id):
     
     if origin == "active_list":
         return redirect(url_for("items_bp.active_list_page", list=updates["list"]) + f"#cat-{cat_slug}")
+    elif origin == "shopping_list":
+        return redirect(url_for("items_bp.shopping_list"))
     return redirect(url_for("items_bp.pantry_list", open_cat=cat_slug) + f"#cat-{cat_slug}")
 
 @items_bp.post("/<item_id>/delete")
@@ -236,6 +243,11 @@ def delete_item(item_id):
         return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
     
     cat_slug = item_doc.get("category", "Uncategorized").lower().replace(" ", "-")
+    origin = request.form.get("origin")
+    if origin == "profile_list_detail":
+        return redirect(url_for("auth_bp.profile", list=item_doc.get("list")))
+    elif origin == "shopping_list":
+        return redirect(url_for("items_bp.shopping_list"))
     
     if item_doc.get("status") == "pantry":
         return redirect(url_for("items_bp.pantry_list", open_cat=cat_slug) + f"#cat-{cat_slug}")
@@ -251,6 +263,11 @@ def activate_list(list_name):
         {"_id": ObjectId(current_user.id)},
         {"$set": {"active_list": list_name}}
     )
+    origin = request.form.get("origin")
+    if origin == "profile":
+        return redirect(url_for("auth_bp.profile", list=list_name))
+    elif origin == "profile_main":
+        return redirect(url_for("auth_bp.profile"))
     return redirect(url_for("items_bp.active_list_page", list=list_name))
 
 @items_bp.post("/list/<list_name>/delete")
@@ -260,6 +277,9 @@ def delete_list(list_name):
         "list": list_name, 
         "user_id": current_user.id
     })
+    origin = request.form.get("origin")
+    if origin == "profile":
+        return redirect(url_for("auth_bp.profile"))
     return redirect(url_for("items_bp.shopping_list"))
 
 def item_search(search_term, status = None):

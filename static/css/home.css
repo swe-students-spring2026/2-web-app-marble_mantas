@@ -1,15 +1,4 @@
-body {
-    display: flex;
-    flex-direction: column;
-    color: #000;
-}
 
-.page {
-    display: flex;
-    flex-direction: column;
-    padding: calc(env(safe-area-inset-top) + 34px) 16px calc(90px + env(safe-area-inset-bottom) + 20px);
-    overflow-y: auto;
-}
 
 .title {
     margin: 0;

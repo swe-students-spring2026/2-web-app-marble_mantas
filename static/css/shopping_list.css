@@ -1,11 +1,4 @@
-body {
-    background: #fff;
-}
 
-.page {
-    display: flex;
-    flex-direction: column;
-}
 
 .header {
     display: flex;
@@ -39,66 +32,15 @@ body {
     overflow-y: auto;
 }
 
-.category-block {
-    border-bottom: 1px solid #000;
-}
 
-.category-toggle {
-    list-style: none;
-    height: 53px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 25px;
-    font-weight: 400;
-    cursor: pointer;
-    position: relative;
-}
 
-.category-toggle::-webkit-details-marker {
-    display: none;
-}
 
-details[open] > .category-toggle {
-    background: #fff;
-}
 
-.category-items {
-    background: #fff;
-}
 
-.item-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    font-size: 20px;
-    border-top: 1px solid #000;
-}
 
-.item-qty {
-    font-size: 15px;
-}
 
-.item-empty {
-    padding: 12px;
-    text-align: center;
-    font-size: 15px;
-    border-top: 1px solid #000;
-}
 
-.action-row {
-    margin-top: 28px;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 28px;
-}
 
-.btn-list-action {
-    width: 70px;
-    height: 30px;
-    font-size: 15px;
-}
 
 @media (max-width: 380px) {
     .header h1 {
@@ -115,42 +57,19 @@ details[open] > .category-toggle {
     background-color: #f7f7f7;
     border-bottom: 2px solid #000;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
 }
 
 .list-entry-title {
     margin: 0;
     font-size: 24px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
 }
 
 .list-actions {
-    display: flex;
-    gap: 5px;
-}
-
-.btn-activate {
-    text-decoration: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 14px;
-    background-color: #4CAF50;
-    color: white;
-    display: flex;
-    align-items: center;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-delete {
-    background-color: #d9534f;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 14px;
-    height: 100%;
-    cursor: pointer;
+    display: none;
 }
 
 .form-inline {

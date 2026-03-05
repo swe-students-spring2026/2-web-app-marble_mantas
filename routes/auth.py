@@ -3,6 +3,7 @@ from flask_login import UserMixin, login_user, logout_user, login_required, curr
 from flask import Blueprint, request, render_template, redirect, url_for, jsonify
 from db import items, users
 from bson import ObjectId
+from routes.items import get_user_items, group_items_by_list
 
 auth_bp = Blueprint("auth_bp", __name__, url_prefix="/auth")
 MAX_PROFILE_IMAGE_BYTES = 4 * 1024 * 1024
@@ -238,16 +239,40 @@ def home():
     active_list_name = current_user.doc.get("active_list") if hasattr(current_user, 'doc') else None
     return render_template("home.html", active_list_name=active_list_name)
 
-@auth_bp.route("/profile", methods=["GET"])
+@auth_bp.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
+    if request.method == "POST":
+        profile_image_data, image_error = encode_profile_image(request.files.get("profile_photo"))
+        if profile_image_data:
+            users.update_one(
+                {"_id": ObjectId(current_user.id)},
+                {"$set": {"profile_image": profile_image_data}}
+            )
+            refreshed_user = User.get_by_id(current_user.id)
+            if refreshed_user:
+                login_user(refreshed_user)
+
     user_lists = get_user_lists(current_user.id)
     profile_image = str((current_user.doc or {}).get("profile_image") or "")
     active_list = current_user.doc.get("active_list")
+    
+    selected_list_name = request.args.get("list")
+    selected_list_data = None
+    if selected_list_name:
+        shopping_lists = group_items_by_list(get_user_items(), status=None)
+        for entry in shopping_lists:
+            if entry["name"] == selected_list_name:
+                selected_list_data = entry
+                break
+        if selected_list_data is None:
+            selected_list_data = {"name": selected_list_name, "categories": [], "count": 0}
+
     return render_template(
         "profile.html",
         username=current_user.username,
         lists=user_lists,
         profile_image=profile_image,
         active_list=active_list,
+        selected_list_data=selected_list_data,
     )
