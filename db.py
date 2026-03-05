@@ -13,6 +13,7 @@ db = client[MONGO_DBNAME]
 # Collections
 items = db["items"]
 users = db["users"]
+lists = db["lists"]
 
 # Ensure unique usernames
 users.create_index("username", unique=True)

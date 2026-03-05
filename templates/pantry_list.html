@@ -51,7 +51,28 @@
             <p class="target-category" id="targetCategoryText"></p>
         </section>
 
-        <section class="pantry-frame" id="pantryFrame" aria-label="Pantry categories"></section>
+        <section class="pantry-frame" aria-label="Pantry categories (Jinja2)">
+            {% for category in grouped_items %}
+                <details class="category-block">
+                    <summary class="category-summary">{{ category.get('name', 'Uncategorized') }}</summary>
+                    <div class="category-items">
+                        {% for item in category.get('items', []) %}
+                            <div class="item-row">
+                                <span>{{ item.name }}</span>
+                                <span class="item-qty">{{ item.quantity }}</span>
+                            </div>
+                        {% else %}
+                            <div class="empty-row">No items</div>
+                        {% endfor %}
+                    </div>
+                </details>
+            {% else %}
+                <div class="empty-row">no match</div>
+            {% endfor %}
+        </section>
+        
+        <!-- Javascript renders into this section -->
+        <section class="pantry-frame hidden" id="pantryFrame" aria-label="Pantry categories"></section>
 
         <section class="action-row" id="actionRow">
             <button class="btn-primary btn-pantry-action" id="editBtn" type="button">Edit</button>
@@ -85,7 +106,7 @@
         </nav>
     </main>
 
-    <script id="pantrySeedData" type="application/json">{{ (items or [])|tojson }}</script>
+    <script id="pantrySeedData" type="application/json">{{ (grouped_items or [])|tojson }}</script>
     <script>
         const params = new URLSearchParams(window.location.search);
         const requestedActiveName = params.get("active");
@@ -155,15 +176,22 @@
             return next;
         }
 
-        function normalizeSeedItems(items) {
-            return (Array.isArray(items) ? items : []).map((item, index) => ({
-                id: String(item?.id || ""),
-                clientId: `existing-${index}`,
-                name: String(item?.name || ""),
-                quantity: String(item?.quantity ?? "1"),
-                category: String(item?.category || "Uncategorized"),
-                list: String(item?.list || "Pantry"),
-            }));
+        function normalizeSeedItems(groupedItems) {
+            const flatItems = [];
+            (Array.isArray(groupedItems) ? groupedItems : []).forEach(cat => {
+                const categoryName = String(cat.name || "Uncategorized");
+                (Array.isArray(cat.items) ? cat.items : []).forEach(item => {
+                    flatItems.push({
+                        id: String(item?.id || ""),
+                        clientId: `existing-${flatItems.length}`,
+                        name: String(item?.name || ""),
+                        quantity: String(item?.quantity ?? "1"),
+                        category: categoryName,
+                        list: String(item?.list || "Pantry"),
+                    });
+                });
+            });
+            return flatItems;
         }
 
         function groupByCategory(items) {
@@ -258,7 +286,7 @@
             }
 
             const payload = await response.json();
-            return normalizeSeedItems(payload.items || []);
+            return normalizeSeedItems(payload.grouped_items || []);
         }
 
         function renderViewCategory(category, openByDefault) {
@@ -430,6 +458,7 @@
         }
 
         function renderFrame() {
+            /* Temporarily commented out to show Jinja2 HTML instead
             pantryFrame.innerHTML = "";
 
             let visible;
@@ -458,6 +487,7 @@
                     : renderViewCategory(category, false);
                 pantryFrame.appendChild(block);
             });
+            */
         }
 
         function renderTargetCategory() {

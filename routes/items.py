@@ -63,31 +63,47 @@ def get_user_items():
     return [serialize_item(item) for item in items.find({"user_id": current_user.id})]
 
 
+def group_items_by_category(items):
+    grouped = {}
+    for item in items:
+        cat = item.get("category") or "Uncategorized"
+        grouped.setdefault(cat, []).append(item)
+
+    sorted_categories = []
+    for cat in sorted(grouped.keys()):
+        sorted_items = sorted(grouped[cat], key=lambda x: (x.get("name") or "").lower())
+        sorted_categories.append({"name": cat, "items": sorted_items})
+    return sorted_categories
+
 def group_items_by_list(item_docs, status=None):
-    grouped = OrderedDict()
+    grouped = {}
     for item in item_docs:
         if status and item.get("status") != status:
             continue
 
-        list_name = item.get("list") or "My List" # in case list field is missing/empty, but shouldn't happen
-        category_name = item.get("category") or "Uncategorized" # in case category field is missing/empty, but shouldn't happen
+        list_name = item.get("list") or "My List"
+        category_name = item.get("category") or "Uncategorized"
         list_entry = grouped.setdefault(
             list_name,
-            {"name": list_name, "categories": OrderedDict(), "count": 0},
+            {"name": list_name, "categories": {}, "count": 0},
         )
         list_entry["count"] += 1
         list_entry["categories"].setdefault(category_name, []).append(item)
 
     lists = []
-    for list_entry in grouped.values():
+    for list_name in sorted(grouped.keys()):
+        list_entry = grouped[list_name]
+        
+        sorted_categories = []
+        for cat in sorted(list_entry["categories"].keys()):
+            sorted_items = sorted(list_entry["categories"][cat], key=lambda x: (x.get("name") or "").lower())
+            sorted_categories.append({"name": cat, "items": sorted_items})
+
         lists.append(
             {
                 "name": list_entry["name"],
                 "count": list_entry["count"],
-                "categories": [
-                    {"name": category_name, "items": category_items}
-                    for category_name, category_items in list_entry["categories"].items()
-                ],
+                "categories": sorted_categories,
             }
         )
     return lists
@@ -116,7 +132,11 @@ def list_items():
     all_items = get_user_items()
     pantry_items = [item for item in all_items if item["status"] == "pantry"]
     shopping_items = [item for item in all_items if item["status"] == "to_buy"]
-    return render_template("items_list.html", pantry_items=pantry_items, shopping_items=shopping_items)
+    
+    grouped_pantry = group_items_by_category(pantry_items)
+    grouped_shopping = group_items_by_list(shopping_items)
+    
+    return render_template("items_list.html", grouped_pantry=grouped_pantry, grouped_shopping=grouped_shopping)
 
 @items_bp.get("/pantry")
 @login_required
@@ -128,16 +148,19 @@ def pantry_list():
     else:
         pantry_items = [item for item in get_user_items() if item["status"] == "pantry"]
 
-    if request.args.get("format") == "json":
-        return jsonify({"items": pantry_items})
+    grouped_items = group_items_by_category(pantry_items)
 
-    return render_template("pantry_list.html", items=pantry_items)
+    if request.args.get("format") == "json":
+        return jsonify({"grouped_items": grouped_items})
+
+    return render_template("pantry_list.html", grouped_items=grouped_items)
 
 @items_bp.get("/shopping")
 @login_required
 def shopping_list():
     shopping_items = [item for item in get_user_items() if item["status"] == "to_buy"]
-    return render_template("shopping_list.html", items=shopping_items)
+    grouped_items = group_items_by_list(shopping_items)
+    return render_template("shopping_list.html", grouped_items=grouped_items)
 
 @items_bp.get("/active")
 @login_required
@@ -179,7 +202,7 @@ def edit_item_form(item_id):
     item = serialize_item(item_doc)
     return render_template("items_form.html", **build_form_context(item=item))
 
-@items_bp.post("/<item_id>/edit")
+@items_bp.post("/<item_id>/update")
 @login_required
 def update_item(item_id):
     updates, error = validate_and_parse_item(request.form)
