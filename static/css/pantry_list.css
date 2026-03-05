@@ -297,3 +297,53 @@ body {
         font-size: 1.05rem;
     }
 }
+
+.item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.item-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-action-sm {
+    text-decoration: none;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    background: #e0e0e0;
+    color: #111;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 26px;
+    line-height: 1.2;
+}
+.btn-action-sm:hover {
+    background: #d0d0d0;
+}
+.delete-pantry-item-form {
+    margin: 0;
+    display: flex;
+}
+.item-list-name {
+    font-size: 0.8em;
+    color: #777;
+    margin-left: 6px;
+}
+.pantry-qty {
+    margin-left: 10px;
+}
+.search-submit-btn {
+    display: none;
+}

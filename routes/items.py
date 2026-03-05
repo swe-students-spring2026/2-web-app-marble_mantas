@@ -129,14 +129,7 @@ def build_form_context(item=None, error=None):
 @items_bp.get("")
 @login_required
 def list_items():
-    all_items = get_user_items()
-    pantry_items = [item for item in all_items if item["status"] == "pantry"]
-    shopping_items = [item for item in all_items if item["status"] == "to_buy"]
-    
-    grouped_pantry = group_items_by_category(pantry_items)
-    grouped_shopping = group_items_by_list(shopping_items)
-    
-    return render_template("items_list.html", grouped_pantry=grouped_pantry, grouped_shopping=grouped_shopping)
+    return redirect(url_for('items_bp.pantry_list'))
 
 @items_bp.get("/pantry")
 @login_required
@@ -144,10 +137,10 @@ def pantry_list():
     search_term = (request.args.get("q") or "").strip()
 
     if search_term:
-        pantry_items = item_search(search_term, status="pantry")
+        pantry_items = item_search(search_term)  # Search through all lists if a search query is provided
     else:
         pantry_items = [item for item in get_user_items() if item["status"] == "pantry"]
-
+        
     grouped_items = group_items_by_category(pantry_items)
 
     if request.args.get("format") == "json":
@@ -194,6 +187,8 @@ def create_item():
     data["user_id"] = current_user.id
     data["created_at"] = datetime.now()
     items.insert_one(data)
+    if data["status"] == "pantry":
+        return redirect(url_for("items_bp.pantry_list"))
     return redirect(url_for("items_bp.active_list_page", list=data["list"]))
 
 @items_bp.get("/<item_id>/edit")
@@ -222,7 +217,12 @@ def update_item(item_id):
         return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
     
     cat_slug = updates.get("category", "").lower().replace(" ", "-")
-    return redirect(url_for("items_bp.active_list_page", list=updates["list"]) + f"#cat-{cat_slug}")
+    origin = request.form.get("origin")
+    
+    if origin == "active_list" or updates.get("status") != "pantry":
+        return redirect(url_for("items_bp.active_list_page", list=updates["list"]) + f"#cat-{cat_slug}")
+        
+    return redirect(url_for("items_bp.pantry_list", open_cat=cat_slug) + f"#cat-{cat_slug}")
 
 @items_bp.post("/<item_id>/delete")
 @login_required
@@ -237,7 +237,12 @@ def delete_item(item_id):
     })
     if result.deleted_count == 0:
         return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
-    return redirect(url_for("items_bp.active_list_page", list=item_doc.get("list") or "My List"))
+    
+    cat_slug = item_doc.get("category", "Uncategorized").lower().replace(" ", "-")
+    
+    if item_doc.get("status") == "pantry":
+        return redirect(url_for("items_bp.pantry_list", open_cat=cat_slug) + f"#cat-{cat_slug}")
+    return redirect(url_for("items_bp.active_list_page", list=item_doc.get("list") or "My List") + f"#cat-{cat_slug}")
 
 
 def item_search(search_term, status = None):
