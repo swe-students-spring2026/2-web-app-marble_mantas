@@ -40,6 +40,7 @@
                                             <input type="hidden" name="name" value="{{ item.name }}">
                                             <input type="hidden" name="quantity" value="{{ item.quantity }}">
                                             <input type="hidden" name="status" value="{% if item.status == 'pantry' %}to_buy{% else %}pantry{% endif %}">
+                                            <input type="hidden" name="origin" value="active_list">
                                             <button
                                                 class="item-check {% if item.status == 'pantry' %}checked{% endif %}"
                                                 type="submit"
