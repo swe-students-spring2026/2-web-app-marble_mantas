@@ -1,60 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	    <title>Shopping List</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shopping Lists</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/shopping_list.css') }}">
 </head>
 <body>
-	<main class="page">
-		<header class="header">
-			<button class="arrow-button" type="button" aria-label="Back">←</button>
-			<h1>List Name</h1>
-			<button class="arrow-button" type="button" aria-label="Share">↱</button>
-		</header>
+    <main class="page">
+        <header class="header" style="justify-content: center;">
+            <h1>My Lists</h1>
+        </header>
 
-                <section class="list-box" aria-label="Categories">
-                        {% for list_entry in grouped_items %}
-                                <h2>{{ list_entry.name }}</h2>
-                                {% for category in list_entry.categories %}
-                                        <details class="category-block">
-                                                <summary class="category-toggle">{{ category.get('name', 'Uncategorized') }}</summary>
-                                                <div class="category-items">
-                                                        {% for item in category.get('items', []) %}
-                                                                <div class="item-row">
-                                                                        <span>{{ item.name }}</span>
-                                                                        <span class="item-qty">{{ item.quantity }}</span>
-                                                                </div>
-							{% else %}
-								<div class="item-empty">No items</div>
-							{% endfor %}
-						</div>
-					</details>
-				{% endfor %}
-			{% else %}
-				<div class="item-empty">No lists found</div>
-			{% endfor %}
-		</section>
+        <section class="list-box" aria-label="Categories" style="margin-bottom: 20px;">
+            {% for list_entry in grouped_items %}
+                <div class="list-entry-header">
+                    <h2 class="list-entry-title">{{ list_entry.name }}</h2>
+                    <div class="list-actions">
+                        <form action="{{ url_for('items_bp.activate_list', list_name=list_entry.name) }}" method="POST" class="form-inline">
+                            <button type="submit" class="btn-activate">Activate</button>
+                        </form>
+                        <form action="{{ url_for('items_bp.delete_list', list_name=list_entry.name) }}" method="POST" class="form-inline" onsubmit="return confirm('Delete list {{ list_entry.name }} and all its items?');">
+                            <button type="submit" class="btn-delete">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% for category in list_entry.categories %}
+                    <details class="category-block">
+                        <summary class="category-toggle">{{ category.get('name', 'Uncategorized') }}</summary>
+                        <div class="category-items">
+                            {% for item in category.get('items', []) %}
+                                <div class="item-row">
+                                    <span>{{ item.name }}</span>
+                                    <span class="item-qty">{{ item.quantity }}</span>
+                                </div>
+                            {% else %}
+                                <div class="item-empty">No items</div>
+                            {% endfor %}
+                        </div>
+                    </details>
+                {% endfor %}
+            {% else %}
+                <div class="item-empty">No lists found</div>
+            {% endfor %}
+        </section>
 
-		<div class="action-row">
-			<button class="btn-primary btn-list-action" type="button">Activate</button>
-			<button class="btn-primary btn-list-action" type="button">Edit</button>
-			<button class="btn-primary btn-list-action" type="button">Delete</button>
-		</div>
 
-		<nav class="bottom-nav" aria-label="Bottom navigation">
-			<a class="icon-button" href="{{ url_for('auth_bp.home') }}" aria-label="Home">
-				<img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
-			</a>
-			<a class="icon-button" href="{{ url_for('items_bp.create_item_form') }}" aria-label="Add">
-				<img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
-			</a>
-			<a class="icon-button" href="{{ url_for('auth_bp.profile') }}" aria-label="Profile">
-				<img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
-			</a>
-		</nav>
-	</main>
+        <nav class="bottom-nav" aria-label="Bottom navigation">
+            <a class="icon-button" href="{{ url_for('auth_bp.home') }}" aria-label="Home">
+                <img src="{{ url_for('static', filename='images/home_icon.png') }}" alt="Home icon" />
+            </a>
+            <a class="icon-button" href="{{ url_for('items_bp.create_item_form') }}" aria-label="Add">
+                <img src="{{ url_for('static', filename='images/plus_icon.png') }}" alt="Plus icon" />
+            </a>
+            <a class="icon-button" href="{{ url_for('auth_bp.profile') }}" aria-label="Profile">
+                <img src="{{ url_for('static', filename='images/list_icon.png') }}" alt="Profile icon" />
+            </a>
+        </nav>
+    </main>
 </body>
 </html>

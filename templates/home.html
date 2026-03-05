@@ -19,15 +19,18 @@
             />
         </div>
 
-        {% if display_active %}
-            <a
-                class="active-list"
-                id="activeListLink"
-                href="{{ url_for('items_bp.active_list_page', list=display_active, active=display_active) }}"
-            >{{ display_active }}</a>
-        {% else %}
-            <span class="active-list inactive">no active list</span>
-        {% endif %}
+        <div class="active-list-container">
+            {% if display_active %}
+                <div class="active-list-label">Active List:</div>
+                <a
+                    class="active-list"
+                    id="activeListLink"
+                    href="{{ url_for('items_bp.active_list_page', list=display_active, active=display_active) }}"
+                >{{ display_active }}</a>
+            {% else %}
+                <span class="active-list inactive">no active list</span>
+            {% endif %}
+        </div>
 
         <div class="bottom-nav">
             <a

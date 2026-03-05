@@ -109,3 +109,51 @@ details[open] > .category-toggle {
         width: calc(100% - 32px);
     }
 }
+
+.list-entry-header {
+    padding: 10px;
+    background-color: #f7f7f7;
+    border-bottom: 2px solid #000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.list-entry-title {
+    margin: 0;
+    font-size: 24px;
+}
+
+.list-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-activate {
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #4CAF50;
+    color: white;
+    display: flex;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-delete {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    height: 100%;
+    cursor: pointer;
+}
+
+.form-inline {
+    margin: 0;
+    display: flex;
+}

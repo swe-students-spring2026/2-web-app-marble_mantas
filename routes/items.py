@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from datetime import datetime
-from db import items
+from db import items, users
 from flask import Blueprint, request, render_template, redirect, url_for, jsonify
 from bson import ObjectId
 from flask_login import login_required, current_user
@@ -159,18 +159,16 @@ def shopping_list():
 @login_required
 def active_list_page():
     shopping_lists = group_items_by_list(get_user_items(), status=None)
-    selected_list_name = (request.args.get("list") or "").strip()
+    selected_list_name = (request.args.get("list") or getattr(current_user, 'doc', {}).get('active_list') or "").strip()
     active_list = None
     for entry in shopping_lists:
         if entry["name"] == selected_list_name:
             active_list = entry
             break
-    # If the requested list was empty (no to_buy items), retain it as empty
+    # If the requested list was empty, retain it as empty
     if active_list is None and selected_list_name:
         active_list = {"name": selected_list_name, "categories": [], "count": 0}
-    # If no list specified, default to first list if it exists
-    if active_list is None and shopping_lists:
-        active_list = shopping_lists[0]
+    # If still no list specified, just don't crash
     return render_template("active_list.html", active_list=active_list)
 
 @items_bp.get("/create")
@@ -219,9 +217,8 @@ def update_item(item_id):
     cat_slug = updates.get("category", "").lower().replace(" ", "-")
     origin = request.form.get("origin")
     
-    if origin == "active_list" or updates.get("status") != "pantry":
+    if origin == "active_list":
         return redirect(url_for("items_bp.active_list_page", list=updates["list"]) + f"#cat-{cat_slug}")
-        
     return redirect(url_for("items_bp.pantry_list", open_cat=cat_slug) + f"#cat-{cat_slug}")
 
 @items_bp.post("/<item_id>/delete")
@@ -244,6 +241,26 @@ def delete_item(item_id):
         return redirect(url_for("items_bp.pantry_list", open_cat=cat_slug) + f"#cat-{cat_slug}")
     return redirect(url_for("items_bp.active_list_page", list=item_doc.get("list") or "My List") + f"#cat-{cat_slug}")
 
+
+@items_bp.post("/list/<list_name>/activate")
+@login_required
+def activate_list(list_name):
+    # Set the active list in the user's document
+    from db import users
+    users.update_one(
+        {"_id": ObjectId(current_user.id)},
+        {"$set": {"active_list": list_name}}
+    )
+    return redirect(url_for("items_bp.active_list_page", list=list_name))
+
+@items_bp.post("/list/<list_name>/delete")
+@login_required
+def delete_list(list_name):
+    result = items.delete_many({
+        "list": list_name, 
+        "user_id": current_user.id
+    })
+    return redirect(url_for("items_bp.shopping_list"))
 
 def item_search(search_term, status = None):
     cleaned_term = (search_term or "").strip()

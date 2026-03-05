@@ -124,6 +124,7 @@
         const profilePhotoUploadUrl = "{{ url_for('auth_bp.settings') }}";
         const updateItemUrlTemplate = "{{ url_for('items_bp.update_item', item_id='ITEM_ID_PLACEHOLDER') }}";
         const deleteItemUrlTemplate = "{{ url_for('items_bp.delete_item', item_id='ITEM_ID_PLACEHOLDER') }}";
+        const activateListUrlTemplate = "{{ url_for('items_bp.activate_list', list_name='LIST_NAME_PLACEHOLDER') }}";
 
         const seedScript = document.getElementById("profileSeedData");
         let initialSeed = { lists: [] };
@@ -156,7 +157,7 @@
 
         const state = {
             listNames: Array.isArray(initialSeed.lists) ? initialSeed.lists.map(String) : [],
-            activeListName: null,
+            activeListName: "{{ active_list or '' }}" || null,
             selectedListName: null,
             originalList: null,
             draftList: null,
@@ -309,6 +310,44 @@
                     badge.className = "active-badge";
                     badge.textContent = "Active";
                     row.appendChild(badge);
+                } else {
+                    const quickActivateBtn = document.createElement("button");
+                    quickActivateBtn.className = "btn-primary";
+                    quickActivateBtn.textContent = "Activate";
+                    quickActivateBtn.style.padding = "4px 8px";
+                    quickActivateBtn.style.fontSize = "0.8em";
+                    quickActivateBtn.style.marginLeft = "auto";
+                    
+                    quickActivateBtn.addEventListener("click", async (e) => {
+                        e.stopPropagation();
+                        quickActivateBtn.disabled = true;
+                        quickActivateBtn.textContent = "Activating...";
+                        
+                        try {
+                            const activateUrl = activateListUrlTemplate.replace("LIST_NAME_PLACEHOLDER", encodeURIComponent(listName));
+                            const response = await fetch(activateUrl, {
+                                method: "POST",
+                                credentials: "same-origin"
+                            });
+            
+                            if (!response.ok) {
+                                throw new Error("Activation failed");
+                            }
+            
+                            state.activeListName = listName;
+                            updateNavLinks();
+                            renderListRows();
+                            
+                            const currentUrl = new URL(window.location.href);
+                            currentUrl.searchParams.set("active", state.activeListName);
+                            history.replaceState(null, "", `${currentUrl.pathname}${currentUrl.search}`);
+                        } catch (error) {
+                            alert("Could not mark list as active on the server.");
+                            quickActivateBtn.disabled = false;
+                            quickActivateBtn.textContent = "Activate";
+                        }
+                    });
+                    row.appendChild(quickActivateBtn);
                 }
 
                 row.addEventListener("click", async () => {
@@ -791,23 +830,43 @@
             await uploadProfileImage(file);
         });
 
-        activateBtn.addEventListener("click", () => {
+        activateBtn.addEventListener("click", async () => {
             if (!state.selectedListName) {
                 return;
             }
-            state.activeListName = state.selectedListName;
-            updateNavLinks();
-            renderListRows();
-            renderActionRow();
 
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set("active", state.activeListName);
-            if (state.selectedListName) {
-                currentUrl.searchParams.set("list", state.selectedListName);
+            activateBtn.disabled = true;
+            setStatus("Activating list...");
+
+            try {
+                const activateUrl = activateListUrlTemplate.replace("LIST_NAME_PLACEHOLDER", encodeURIComponent(state.selectedListName));
+                const response = await fetch(activateUrl, {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Activation failed");
+                }
+
+                state.activeListName = state.selectedListName;
+                updateNavLinks();
+                renderListRows();
+                renderActionRow();
+
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set("active", state.activeListName);
+                if (state.selectedListName) {
+                    currentUrl.searchParams.set("list", state.selectedListName);
+                }
+                history.replaceState(null, "", `${currentUrl.pathname}${currentUrl.search}`);
+
+                setStatus("List marked as active.");
+            } catch (error) {
+                setStatus("Could not mark list as active on the server.");
+            } finally {
+                activateBtn.disabled = false;
             }
-            history.replaceState(null, "", `${currentUrl.pathname}${currentUrl.search}`);
-
-            setStatus("List marked active for this session.");
         });
 
         editBtn.addEventListener("click", () => {

@@ -61,6 +61,16 @@
             {% endif %}
         </section>
 
+        {% if selected_name %}
+        <div class="action-row">
+            <form action="{{ url_for('items_bp.delete_list', list_name=selected_name) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Delete list {{ selected_name }} and all its items?');">
+                <button type="submit" class="btn-primary btn-list-action btn-danger">Delete</button>
+            </form>
+            <a href="{{ url_for('items_bp.create_item_form', list=selected_name) }}" class="btn-primary btn-list-action" style="text-decoration: none; display: flex; justify-content: center; align-items: center;">Edit</a>
+            <a href="{{ url_for('auth_bp.home') }}" class="btn-primary btn-list-action" style="text-decoration: none; display: flex; justify-content: center; align-items: center;">Save</a>
+        </div>
+        {% endif %}
+
         <nav class="bottom-nav" aria-label="Bottom navigation">
             <a
                 class="icon-button"

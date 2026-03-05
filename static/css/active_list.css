@@ -155,3 +155,27 @@ details[open] > .category-toggle {
         font-size: 0.8rem;
     }
 }
+
+.action-row {
+    margin-top: 28px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 17px;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.btn-list-action {
+    width: 80px;
+    height: 35px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.btn-danger {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+}

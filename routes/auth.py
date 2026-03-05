@@ -235,19 +235,19 @@ def settings():
 @auth_bp.route("/home", methods=["GET"])
 @login_required
 def home():
-    user_lists = get_user_lists(current_user.id)
-    active_list_name = user_lists[0] if user_lists else None
+    active_list_name = current_user.doc.get("active_list") if hasattr(current_user, 'doc') else None
     return render_template("home.html", active_list_name=active_list_name)
-
 
 @auth_bp.route("/profile", methods=["GET"])
 @login_required
 def profile():
     user_lists = get_user_lists(current_user.id)
     profile_image = str((current_user.doc or {}).get("profile_image") or "")
+    active_list = current_user.doc.get("active_list")
     return render_template(
         "profile.html",
         username=current_user.username,
         lists=user_lists,
         profile_image=profile_image,
+        active_list=active_list,
     )
