@@ -15,38 +15,26 @@
 			<button class="arrow-button" type="button" aria-label="Share">↱</button>
 		</header>
 
-		{% set categories = [] %}
-		{% for item in items %}
-			{% set category_name = item.category or 'Uncategorized' %}
-			{% if category_name not in categories %}
-				{% set _ = categories.append(category_name) %}
-			{% endif %}
-		{% endfor %}
-		{% if categories|length == 0 %}
-			{% set categories = ['Category 1', 'Category 2', 'Category 3'] %}
-		{% endif %}
-
 		<section class="list-box" aria-label="Categories">
-			{% for category in categories %}
-				<details class="category-block">
-					<summary class="category-toggle">{{ category }}</summary>
-					<div class="category-items">
-						{% set ns = namespace(found=false) %}
-						{% for item in items %}
-							{% set item_category = item.category or 'Uncategorized' %}
-							{% if item_category == category %}
-								{% set ns.found = true %}
+			{% for list_entry in grouped_items %}
+				<h2>{{ list_entry.name }}</h2>
+				{% for category in list_entry.categories %}
+					<details class="category-block">
+						<summary class="category-toggle">{{ category.name }}</summary>
+						<div class="category-items">
+							{% for item in category.items %}
 								<div class="item-row">
 									<span>{{ item.name }}</span>
 									<span class="item-qty">{{ item.quantity }}</span>
 								</div>
-							{% endif %}
-						{% endfor %}
-						{% if not ns.found %}
-							<div class="item-empty">No items</div>
-						{% endif %}
-					</div>
-				</details>
+							{% else %}
+								<div class="item-empty">No items</div>
+							{% endfor %}
+						</div>
+					</details>
+				{% endfor %}
+			{% else %}
+				<div class="item-empty">No lists found</div>
 			{% endfor %}
 		</section>
 
