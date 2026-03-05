@@ -51,7 +51,7 @@
                                         
                                         <div class="d-flex-gap-8">
                                             <a href="{{ url_for('items_bp.edit_item_form', item_id=item.id) }}" class="btn-primary btn-sm btn-auto-width text-none">Edit</a>
-                                            <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST" onsubmit="return confirm('Delete this item?');" class="m-0">
+                                            <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST"  class="m-0">
                                                 <input type="hidden" name="origin" value="active_list" />
                                                 <button type="submit" class="btn-primary btn-sm btn-auto-width btn-danger">Delete</button>
                                             </form>
@@ -76,7 +76,7 @@
                 <button type="submit" class="btn-primary w-100">Activate</button>
             </form>
             <a href="{{ url_for('items_bp.create_item_form', list=selected_name, origin='active_list') }}" class="btn-primary flex-1 center-flex text-none">Add Item</a>
-            <form action="{{ url_for('items_bp.delete_list', list_name=selected_name) }}" method="POST" class="flex-1 m-0" onsubmit="return confirm('Delete list {{ selected_name }} and all its items?');">                                
+            <form action="{{ url_for('items_bp.delete_list', list_name=selected_name) }}" method="POST" class="flex-1 m-0" >                                
                 <input type="hidden" name="origin" value="active_list" />
                 <button type="submit" class="btn-primary w-100 btn-danger">Delete</button>                                                        
             </form>

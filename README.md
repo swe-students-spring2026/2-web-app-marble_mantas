@@ -129,4 +129,4 @@ docker rm mongodb_pantrypal
 
 [Link to the Sprint 1 task board.](https://github.com/orgs/swe-students-spring2026/projects/7/views/1)
 
-[Link to the Sprint 1 task board.](https://github.com/orgs/swe-students-spring2026/projects/46/views/1)
+[Link to the Sprint 2 task board.](https://github.com/orgs/swe-students-spring2026/projects/46/views/1)

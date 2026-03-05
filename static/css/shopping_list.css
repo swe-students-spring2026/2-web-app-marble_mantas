@@ -1,55 +1,83 @@
 
 
-.header {
+.pantry-header {
+    margin-top: 8px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 58px 18px 20px;
+    gap: 12px;
 }
 
-.header h1 {
+.pantry-title {
     margin: 0;
-    font-size: 48px;
+    font-size: 1.65rem;
     font-weight: 400;
     line-height: 1;
 }
 
-.arrow-button {
-    border: none;
-    background: transparent;
-    font-size: 36px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 4px;
-}
-
-.list-box {
-    width: 296px;
-    height: 517px;
-    margin: 0 auto;
-    border: 1px solid #000;
+.pantry-frame {
+    margin-top: 12px;
+    width: 100%;
+    flex: 0 0 auto;
+    min-height: 220px;
+    max-height: calc(100dvh - 220px);
+    border: 1px solid #777;
     background: transparent;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
+.category-block {
+    border-bottom: 1px solid #777;
+    background: #fff;
+}
 
+.category-toggle, .category-summary {
+    list-style: none;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 400;
+    text-align: center;
+    cursor: pointer;
+    padding: 0 8px;
+}
 
+.category-toggle::-webkit-details-marker,
+.category-summary::-webkit-details-marker {
+    display: none;
+}
 
+.category-toggle::marker,
+.category-summary::marker {
+    content: "";
+}
 
+.category-items {
+    background: #fff;
+    padding: 0 12px 12px;
+}
 
+.item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed #ccc;
+    font-size: 1rem;
+}
 
+.item-row:last-child {
+    border-bottom: none;
+}
 
-
-
-
-@media (max-width: 380px) {
-    .header h1 {
-        font-size: 40px;
-    }
-
-    .list-box {
-        width: calc(100% - 32px);
-    }
+.empty-row {
+    text-align: center;
+    padding: 16px;
+    color: #555;
+    font-size: 0.95rem;
+    font-style: italic;
 }
 
 .list-entry-header {
@@ -62,17 +90,13 @@
 
 .list-entry-title {
     margin: 0;
-    font-size: 24px;
+    font-size: 1.5rem;
+    font-weight: bold;
     text-align: center;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
 }
 
-.list-actions {
-    display: none;
-}
-
-.form-inline {
-    margin: 0;
-    display: flex;
+.action-row {
+    border-top: 1px solid #ddd;
+    padding-top: 12px;
 }

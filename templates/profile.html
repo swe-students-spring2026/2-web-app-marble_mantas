@@ -26,10 +26,7 @@
                     <span class="avatar-label{% if profile_image %} hidden{% endif %}" id="avatarLabel">add photo</span>
                     <img class="avatar-image{% if not profile_image %} hidden{% endif %}" id="avatarImage" src="{{ profile_image or '' }}" alt="Profile picture" />
                 </label>
-                <div class="avatar-controls">
-                    <input id="avatarInput" name="profile_photo" type="file" accept="image/*" class="avatar-file-input" />
-                    <button type="submit" class="btn-primary btn-sm">Save</button>
-                </div>
+                <input id="avatarInput" name="profile_photo" type="file" accept="image/*" style="display: none;" onchange="this.form.submit()" />
             </form>
             <div class="username">{{ username or "Username" }}</div>
 
@@ -106,7 +103,7 @@
 
                                             <div class="d-flex-gap-8">
                                                 <a href="{{ url_for('items_bp.edit_item_form', item_id=item.id) }}" class="btn-primary  btn-sm btn-auto-width">Edit</a>
-                                                <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST" onsubmit="return confirm('Delete this item?');" class="m-0">
+                                                <form action="{{ url_for('items_bp.delete_item', item_id=item.id) }}" method="POST"  class="m-0">
                                                     <input type="hidden" name="origin" value="profile_list_detail" />
                                                     <button type="submit" class="btn-primary  btn-sm btn-auto-width">Delete</button>
                                                 </form>
@@ -137,7 +134,7 @@
                         </div>
                     {% endif %}
                     
-                    <form action="{{ url_for('items_bp.delete_list', list_name=request.args.get('list')) }}" method="POST" class="flex-1" onsubmit="return confirm('Delete this entire list?');">
+                    <form action="{{ url_for('items_bp.delete_list', list_name=request.args.get('list')) }}" method="POST" class="flex-1" >
                         <input type="hidden" name="origin" value="profile" />
                         <button class="btn-primary  w-100" type="submit">Delete List</button>
                     </form>

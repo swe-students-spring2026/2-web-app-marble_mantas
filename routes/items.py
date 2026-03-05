@@ -110,13 +110,9 @@ def group_items_by_list(item_docs, status=None):
 
 
 def build_form_context(item=None, error=None):
-    shopping_lists = group_items_by_list(get_user_items(), status="to_buy")
-    existing_lists = [entry["name"] for entry in shopping_lists]
-    existing_categories = []
-    for entry in shopping_lists:
-        for category in entry["categories"]:
-            if category["name"] not in existing_categories:
-                existing_categories.append(category["name"])
+    all_items = get_user_items()
+    existing_lists = sorted(list(set(doc.get("list") for doc in all_items if doc.get("list"))))
+    existing_categories = sorted(list(set(doc.get("category") for doc in all_items if doc.get("category"))))
 
     return {
         "item": item,
@@ -220,12 +216,13 @@ def update_item(item_id):
         return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
     
     cat_slug = updates.get("category", "").lower().replace(" ", "-")
+    list_slug = updates.get("list", "").lower().replace(" ", "-")
     origin = request.form.get("origin")
     
     if origin == "active_list":
         return redirect(url_for("items_bp.active_list_page", list=updates["list"]) + f"#cat-{cat_slug}")
     elif origin == "shopping_list":
-        return redirect(url_for("items_bp.shopping_list"))
+        return redirect(url_for("items_bp.shopping_list") + f"#list-{list_slug}-cat-{cat_slug}")
     return redirect(url_for("items_bp.pantry_list", open_cat=cat_slug) + f"#cat-{cat_slug}")
 
 @items_bp.post("/<item_id>/delete")
