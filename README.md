@@ -109,6 +109,7 @@ http://127.0.0.1:5000
 - Make sure your `.env` file exists.
 - If port `27017` is already in use, stop any existing MongoDB instances, or configure `.env` to use a different port, and set up MongoDB using that port.
 - If Flask does not start, ensure you activated the pipenv shell.
+- If port `5000` is already in use causing a 403 error, do `flask run --port=5001` and visit `http://127.0.0.1:5001` instead.
 
 ### Stopping the Application
 
