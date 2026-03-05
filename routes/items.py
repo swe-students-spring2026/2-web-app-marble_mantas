@@ -165,14 +165,17 @@ def shopping_list():
 @items_bp.get("/active")
 @login_required
 def active_list_page():
-    shopping_lists = group_items_by_list(get_user_items(), status="to_buy")
+    shopping_lists = group_items_by_list(get_user_items(), status=None)
     selected_list_name = (request.args.get("list") or "").strip()
     active_list = None
     for entry in shopping_lists:
         if entry["name"] == selected_list_name:
             active_list = entry
             break
-    # If no list specified or not found, default to first list if it exists
+    # If the requested list was empty (no to_buy items), retain it as empty
+    if active_list is None and selected_list_name:
+        active_list = {"name": selected_list_name, "categories": [], "count": 0}
+    # If no list specified, default to first list if it exists
     if active_list is None and shopping_lists:
         active_list = shopping_lists[0]
     return render_template("active_list.html", active_list=active_list)
@@ -218,7 +221,8 @@ def update_item(item_id):
     if result.matched_count == 0:
         return render_template("items_form.html", **build_form_context(error="Item not found or access denied")), 404
     
-    return redirect(url_for("items_bp.active_list_page", list=updates["list"]))
+    cat_slug = updates.get("category", "").lower().replace(" ", "-")
+    return redirect(url_for("items_bp.active_list_page", list=updates["list"]) + f"#cat-{cat_slug}")
 
 @items_bp.post("/<item_id>/delete")
 @login_required

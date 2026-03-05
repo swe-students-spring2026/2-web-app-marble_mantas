@@ -25,7 +25,8 @@
         <section class="list-frame" id="activeListFrame" aria-label="List categories">
             {% if selected_list and selected_list.categories %}
                 {% for category in selected_list.categories %}
-                    <details class="category-group">
+                    {% set cat_slug = category.name | lower | replace(' ', '-') %}
+                    <details class="category-group" open id="cat-{{ cat_slug }}">
                         <summary class="category-toggle">{{ category.name }}</summary>
                         <div class="category-items">
                             {% if category['items'] %}
@@ -33,18 +34,19 @@
                                     <div class="item-row" data-item-id="{{ item.id }}">
                                         <span class="item-name">{{ item.name }}</span>
                                         <span class="item-qty">{{ item.quantity }}</span>
-                                        <button
-                                            class="item-check"
-                                            type="button"
-                                            aria-label="Toggle {{ item.name }} complete"
-                                            aria-pressed="false"
-                                            data-item-id="{{ item.id }}"
-                                            data-item-name="{{ item.name }}"
-                                            data-item-quantity="{{ item.quantity }}"
-                                            data-item-category="{{ category.name }}"
-                                            data-list-name="{{ selected_name }}"
-                                            data-item-status="{{ item.status }}"
-                                        ></button>
+                                        <form action="{{ url_for('items_bp.update_item', item_id=item.id) }}" method="POST" style="display: inline;">
+                                            <input type="hidden" name="list" value="{{ selected_name }}">
+                                            <input type="hidden" name="category" value="{{ category.name }}">
+                                            <input type="hidden" name="name" value="{{ item.name }}">
+                                            <input type="hidden" name="quantity" value="{{ item.quantity }}">
+                                            <input type="hidden" name="status" value="{% if item.status == 'pantry' %}to_buy{% else %}pantry{% endif %}">
+                                            <button
+                                                class="item-check {% if item.status == 'pantry' %}checked{% endif %}"
+                                                type="submit"
+                                                aria-label="{% if item.status == 'pantry' %}Mark {{ item.name }} incomplete{% else %}Complete {{ item.name }}{% endif %}"
+                                                aria-pressed="{% if item.status == 'pantry' %}true{% else %}false{% endif %}"
+                                            >{% if item.status == 'pantry' %}x{% endif %}</button>
+                                        </form>
                                     </div>
                                 {% endfor %}
                             {% else %}
@@ -54,7 +56,7 @@
                     </details>
                 {% endfor %}
             {% else %}
-                <div class="empty-row"></div>
+                <div class="empty-row">List empty or all items completed!</div>
             {% endif %}
         </section>
 
@@ -83,57 +85,5 @@
         </nav>
     </main>
 
-    <script id="activeListData" type="application/json">{{ selected_list|tojson }}</script>
-    <script>
-        const updateItemUrlTemplate = "{{ url_for('items_bp.update_item', item_id='ITEM_ID_PLACEHOLDER') }}";
-
-        function itemUpdateUrl(itemId) {
-            return updateItemUrlTemplate.replace("ITEM_ID_PLACEHOLDER", encodeURIComponent(itemId));
-        }
-
-        async function updateItemStatus(checkButton, checked) {
-            const itemId = checkButton.dataset.itemId;
-            const body = new URLSearchParams({
-                list: checkButton.dataset.listName || "",
-                category: checkButton.dataset.itemCategory || "",
-                name: checkButton.dataset.itemName || "",
-                quantity: checkButton.dataset.itemQuantity || "1",
-                status: checked ? "pantry" : "to_buy",
-            });
-
-            const response = await fetch(itemUpdateUrl(itemId), {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: body.toString(),
-                credentials: "same-origin",
-                redirect: "follow",
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to update ${itemId}`);
-            }
-        }
-
-        document.querySelectorAll(".item-check").forEach((checkButton) => {
-            checkButton.addEventListener("click", async () => {
-                const nextChecked = !checkButton.classList.contains("checked");
-
-                checkButton.classList.toggle("checked", nextChecked);
-                checkButton.setAttribute("aria-pressed", String(nextChecked));
-                checkButton.textContent = nextChecked ? "x" : "";
-
-                try {
-                    await updateItemStatus(checkButton, nextChecked);
-                } catch (error) {
-                    checkButton.classList.toggle("checked", !nextChecked);
-                    checkButton.setAttribute("aria-pressed", String(!nextChecked));
-                    checkButton.textContent = !nextChecked ? "x" : "";
-                    alert("Could not save checkbox state to MongoDB.");
-                }
-            });
-        });
-    </script>
 </body>
 </html>
